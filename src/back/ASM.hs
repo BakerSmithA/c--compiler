@@ -72,9 +72,16 @@ println = undefined
 
 -- Return instruction to store int term in supplied register.
 intTerm :: AST.IntTerm -> RegIdx -> St [Instr]
-intTerm (AST.Var name) reg = undefined
-intTerm (AST.Lit x) reg = undefined
-intTerm (AST.Result call) reg = undefined
+intTerm (AST.Var name) reg = do
+    addr <- Env.getVar name
+    return [MoveI reg (fromIntegral addr), LoadIdx reg reg 0]
+intTerm (AST.Lit x) reg =
+    return [MoveI reg (fromIntegral x)]
+intTerm (AST.Result func) reg = do
+    ret     <- Env.ret
+    callAsm <- call func
+    let copy = Move reg ret
+    return (callAsm ++ [copy])
 intTerm (AST.ArrAccess name idx) reg = undefined
 intTerm (AST.Parens val) reg = undefined
 

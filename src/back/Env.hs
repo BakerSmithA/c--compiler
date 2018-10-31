@@ -3,6 +3,8 @@ module Back.Env where
 import Control.Monad.State
 import Data.Map (Map)
 import qualified Data.Map as Map
+import Data.Set (Set)
+import qualified Data.Set as Set
 import Data.Maybe (fromJust)
 import Front.AST
 import Back.Instr
@@ -19,6 +21,8 @@ data Env = Env {
   , bpIdx :: RegIdx
     -- Index of return value register (EAX in x86)
   , retIdx :: RegIdx
+  -- Registers that are not in-use.
+  , freeRegs :: Set RegIdx
     -- Where variables are stored on the stack.
   , varAddr :: Map VarName Addr
     -- Current function argument names. Used to tell where to retrieve a variable from.
@@ -32,7 +36,7 @@ type St a = State Env a
 
 -- environment with no variables, arguments, or used labels.
 empty :: Env
-empty = Env 14 15 16 17 Map.empty Map.empty 0
+empty = Env 14 15 16 17 (Set.fromList [0..13]) Map.empty Map.empty 0
 
 -- Return index of stack pointer register.
 sp :: St RegIdx
@@ -74,6 +78,25 @@ freshLabel = do
     env <- get
     put (env { currLabel = (currLabel env) + 1 })
     return (show (currLabel env))
+
+-- Removes a register from the free-list.
+takeReg :: St RegIdx
+takeReg = do
+    env <- get
+    let (idx, freeRegs') = Set.deleteFindMin (freeRegs env)
+    case Set.size freeRegs' of
+        0 -> error "No registers available"
+        _ -> do
+            put (env { freeRegs = freeRegs' })
+            return idx
+
+-- Puts a register back on the free-list to be used again.
+freeReg :: RegIdx -> St ()
+freeReg reg = modify $ \env ->
+    env { freeRegs = Set.insert reg (freeRegs env) }
+
+tempReg :: (RegIdx -> St a) -> St a
+tempReg f = undefined
 
 runSt :: Env -> St a -> a
 runSt env st = fst (runState st env)
