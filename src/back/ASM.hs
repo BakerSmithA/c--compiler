@@ -64,17 +64,9 @@ printAsm = undefined
 println :: St [Instr]
 println = undefined
 
--- data IntTerm = Var VarName
---              | Lit Int
---              | Result FuncCall
---              | ArrAccess VarName IntVal
---              | Parens IntVal
-
--- Return instruction to store int term in supplied register.
+-- Return instructions to store int term in supplied register.
 intTerm :: AST.IntTerm -> RegIdx -> St [Instr]
-intTerm (AST.Var name) reg = do
-    addr <- Env.getVar name
-    return [MoveI reg (fromIntegral addr), LoadIdx reg reg 0]
+intTerm (AST.Var name) reg = var name reg
 intTerm (AST.Lit x) reg =
     return [MoveI reg (fromIntegral x)]
 intTerm (AST.Result func) reg = do
@@ -82,8 +74,21 @@ intTerm (AST.Result func) reg = do
     callAsm <- call func
     let copy = Move reg ret
     return (callAsm ++ [copy])
-intTerm (AST.ArrAccess name idx) reg = undefined
-intTerm (AST.Parens val) reg = undefined
+intTerm (AST.ArrAccess name idx) reg = Env.tempReg $ \idxReg -> do
+    startAsm <- var name reg
+    idxAsm <- intVal idx idxReg
+    let load = LoadBaseIdx reg reg idxReg
+    return (startAsm ++ idxAsm ++ [load])
+intTerm (AST.Parens val) reg = intVal val reg
+
+intVal :: AST.IntVal -> RegIdx -> St [Instr]
+intVal = undefined
+
+-- Return instructions to load variable/function argument into register.
+var :: AST.VarName -> RegIdx -> St [Instr]
+var name reg = do
+    addr <- Env.getVar name
+    return [MoveI reg (fromIntegral addr), LoadIdx reg reg 0]
 
 -- Push the values in the registers to the top of the stack.
 -- Assumes sp points to next free address on stack.

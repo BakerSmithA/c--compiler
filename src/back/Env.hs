@@ -23,10 +23,8 @@ data Env = Env {
   , retIdx :: RegIdx
   -- Registers that are not in-use.
   , freeRegs :: Set RegIdx
-    -- Where variables are stored on the stack.
+    -- Where variables/arguments are stored on the stack.
   , varAddr :: Map VarName Addr
-    -- Current function argument names. Used to tell where to retrieve a variable from.
-  , args :: Map VarName ArgIdx
     -- Used to generate fresh labels for branch locations.
   , currLabel :: Int
 }
@@ -36,7 +34,7 @@ type St a = State Env a
 
 -- environment with no variables, arguments, or used labels.
 empty :: Env
-empty = Env 14 15 16 17 (Set.fromList [0..13]) Map.empty Map.empty 0
+empty = Env 14 15 16 17 (Set.fromList [0..13]) Map.empty 0
 
 -- Return index of stack pointer register.
 sp :: St RegIdx
@@ -67,11 +65,6 @@ putVar :: VarName -> Addr -> St ()
 putVar name addr = modify $ \env ->
     env { varAddr = Map.insert name addr (varAddr env) }
 
--- Sets the arguments of the function ASM is currently being generated for.
-setArgs :: [VarName] -> St ()
-setArgs args = modify $ \env ->
-    env { args = Map.fromList (zip args [0..]) }
-
 -- Returns a fresh label to use as a branch location.
 freshLabel :: St String
 freshLabel = do
@@ -95,8 +88,13 @@ freeReg :: RegIdx -> St ()
 freeReg reg = modify $ \env ->
     env { freeRegs = Set.insert reg (freeRegs env) }
 
+-- Take a register for the duration of the supplied function, and put back after.
 tempReg :: (RegIdx -> St a) -> St a
-tempReg f = undefined
+tempReg f = do
+    reg <- takeReg
+    res <- f reg
+    freeReg reg
+    return res
 
 runSt :: Env -> St a -> a
 runSt env st = fst (runState st env)
