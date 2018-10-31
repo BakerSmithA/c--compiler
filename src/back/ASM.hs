@@ -64,6 +64,20 @@ printAsm = undefined
 println :: St [Instr]
 println = undefined
 
+-- data IntTerm = Var VarName
+--              | Lit Int
+--              | Result FuncCall
+--              | ArrAccess VarName IntVal
+--              | Parens IntVal
+
+-- Return instruction to store int term in supplied register.
+intTerm :: AST.IntTerm -> RegIdx -> St [Instr]
+intTerm (AST.Var name) reg = undefined
+intTerm (AST.Lit x) reg = undefined
+intTerm (AST.Result call) reg = undefined
+intTerm (AST.ArrAccess name idx) reg = undefined
+intTerm (AST.Parens val) reg = undefined
+
 -- Push the values in the registers to the top of the stack.
 -- Assumes sp points to next free address on stack.
 --

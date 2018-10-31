@@ -3,6 +3,7 @@ module Back.Env where
 import Control.Monad.State
 import Data.Map (Map)
 import qualified Data.Map as Map
+import Data.Maybe (fromJust)
 import Front.AST
 import Back.Instr
 
@@ -49,9 +50,17 @@ bp = fmap bpIdx get
 ret :: St RegIdx
 ret = fmap retIdx get
 
+-- Returns address associated with variable, or crashes if address not associated
+-- with variable.
+getVar :: VarName -> St Addr
+getVar name = do
+    env <- get
+    let addr = Map.lookup name (varAddr env)
+    return (fromJust addr)
+
 -- Keeps track of a variable and associated stack address.
-addVar :: VarName -> Addr -> St ()
-addVar name addr = modify $ \env ->
+putVar :: VarName -> Addr -> St ()
+putVar name addr = modify $ \env ->
     env { varAddr = Map.insert name addr (varAddr env) }
 
 -- Sets the arguments of the function ASM is currently being generated for.
