@@ -29,6 +29,22 @@ data Env = Env {
 -- Uses ASM environment to compute value.
 type St a = State Env a
 
+-- Return index of stack pointer register.
+sp :: St RegIdx
+sp = fmap spIdx get
+
+-- Return index of link register.
+lr :: St RegIdx
+lr = fmap lrIdx get
+
+-- Return index of base pointer register.
+bp :: St RegIdx
+bp = fmap bpIdx get
+
+-- Return index of return value register.
+ret :: St RegIdx
+ret = fmap retIdx get
+
 -- Keeps track of a variable and associated stack address.
 addVar :: VarName -> Addr -> St ()
 addVar name addr = modify $ \env ->
@@ -45,3 +61,6 @@ freshLabel = do
     env <- get
     put (env { currLabel = (currLabel env) + 1 })
     return (show (currLabel env))
+
+runSt :: Env -> St a -> a
+runSt = undefined

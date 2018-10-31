@@ -1,7 +1,8 @@
 module Back.ASM where
 
 import qualified Front.AST as AST
-import Back.Env
+import Back.Env (St)
+import qualified Back.Env as Env
 import Back.Instr
 
 stm :: AST.Stm -> St [Instr]
@@ -62,3 +63,21 @@ printAsm = undefined
 -- Return ASM for printing a newline.
 println :: St [Instr]
 println = undefined
+
+-- Push the values in the registers to the top of the stack.
+push :: [RegIdx] -> St [Instr]
+push regs = do
+    sp <- Env.sp
+    let store (idx, offset) = StoreIdx idx sp offset
+        stores = map store (zip regs [0..])
+        incSp  = AddI sp sp (fromIntegral $ length regs)
+    return (stores ++ [incSp])
+
+-- Pop values from the top of the stack into registers.
+pop :: [RegIdx] -> Val -> St [Instr]
+pop regs stackOffset = do
+    sp <- Env.sp
+    let load (idx, offset) = LoadIdx idx sp (-(offset+stackOffset))
+        loads = map load (zip regs [1..])
+        decSp = SubI sp sp (fromIntegral $ length regs)
+    return (loads ++ [decSp])
