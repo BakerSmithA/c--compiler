@@ -65,6 +65,24 @@ println :: St [Instr]
 println = undefined
 
 -- Push the values in the registers to the top of the stack.
+-- Assumes sp points to next free address on stack.
+--
+-- E.g.
+-- Before `push [4, 5]`:
+--      -----------
+--      |    1    |
+--      |    4    |
+--      |         | <- SP
+--      -----------
+--
+-- After:
+--      -----------
+--      |    1    |
+--      |    4    |
+--      |    X    |
+--      |    Y    |
+--      |         | <- SP
+--      -----------
 push :: [RegIdx] -> St [Instr]
 push regs = do
     sp <- Env.sp
@@ -74,6 +92,23 @@ push regs = do
     return (stores ++ [incSp])
 
 -- Pop values from the top of the stack into registers.
+-- Assumes sp points to free address on top of stack.
+--
+-- E.g.
+-- Before `pop [4, 5]`
+--      -----------
+--      |    8    |
+--      |    6    |
+--      |    1    |
+--      |    2    |
+--      -----------
+--
+-- After:
+--       -----------
+--       |    8    |
+--       |    6    |
+--       |         | <- SP
+--       -----------
 pop :: [RegIdx] -> Val -> St [Instr]
 pop regs stackOffset = do
     sp <- Env.sp
