@@ -109,10 +109,10 @@ push regs = do
 --       |    6    |
 --       |         | <- SP
 --       -----------
-pop :: [RegIdx] -> Val -> St [Instr]
-pop regs stackOffset = do
+pop :: [RegIdx] -> St [Instr]
+pop regs = do
     sp <- Env.sp
-    let load (idx, offset) = LoadIdx idx sp (-(offset+stackOffset))
+    let load (idx, offset) = LoadIdx idx sp (-offset)
         loads = map load (zip regs [1..])
         decSp = SubI sp sp (fromIntegral $ length regs)
     return (loads ++ [decSp])

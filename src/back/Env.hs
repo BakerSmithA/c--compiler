@@ -29,6 +29,10 @@ data Env = Env {
 -- Uses ASM environment to compute value.
 type St a = State Env a
 
+-- environment with no variables, arguments, or used labels.
+empty :: Env
+empty = Env 14 15 16 17 Map.empty Map.empty 0
+
 -- Return index of stack pointer register.
 sp :: St RegIdx
 sp = fmap spIdx get
@@ -63,4 +67,4 @@ freshLabel = do
     return (show (currLabel env))
 
 runSt :: Env -> St a -> a
-runSt = undefined
+runSt env st = fst (runState st env)
