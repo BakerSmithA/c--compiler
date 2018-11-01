@@ -21,6 +21,7 @@ asmSpec = describe "asm generation" $ do
     assignArrElemSpec
     ifSpec
     ifElseSpec
+    whileSpec
 
 pushSpec :: Spec
 pushSpec = describe "push" $ do
@@ -118,5 +119,19 @@ ifElseSpec = describe "if else" $ do
                  , Label "0"
                  , MoveI 1 8
                  , Print 1
+                 , Label "1"]
+        runSt empty (stm ast) `shouldBe` exp
+
+whileSpec :: Spec
+whileSpec = describe "while" $ do
+    it "generates asm" $ do
+        let ast = AST.While AST.FALSE (AST.Print (AST.Lit 5))
+            exp = [MoveI 0 0
+                 , BF 0 "1"
+                 , Label "0"
+                 , MoveI 1 5
+                 , Print 1
+                 , MoveI 0 0
+                 , BT 0 "0"
                  , Label "1"]
         runSt empty (stm ast) `shouldBe` exp
