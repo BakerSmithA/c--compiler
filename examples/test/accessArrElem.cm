@@ -1,0 +1,4 @@
+def main() {
+    let xs = [1, 2]
+    print(xs[1])
+}

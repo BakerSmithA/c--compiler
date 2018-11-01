@@ -83,16 +83,20 @@ freshLabel = do
     put (env { currLabel = (currLabel env) + 1 })
     return (show (currLabel env))
 
+takeEnvReg :: Env -> (RegIdx, Env)
+takeEnvReg env =
+    let (idx, freeRegs') = Set.deleteFindMin (freeRegs env)
+    in case Set.size freeRegs' of
+        0 -> error "No registers available"
+        _ -> (idx, env { freeRegs = freeRegs' })
+
 -- Removes a register from the free-list.
 takeReg :: St RegIdx
 takeReg = do
     env <- get
-    let (idx, freeRegs') = Set.deleteFindMin (freeRegs env)
-    case Set.size freeRegs' of
-        0 -> error "No registers available"
-        _ -> do
-            put (env { freeRegs = freeRegs' })
-            return idx
+    let (reg, env') = takeEnvReg env
+    put env'
+    return reg
 
 -- Puts a register back on the free-list to be used again.
 freeReg :: RegIdx -> St ()

@@ -3,7 +3,7 @@ module Back.ASMSpec where
 import Test.Hspec
 import qualified Front.AST as AST
 import Back.ASM
-import Back.Env as Env (runSt, empty, fromVars)
+import Back.Env as Env (runSt, empty, fromVars, takeEnvReg)
 import Back.Instr
 
 sp :: RegIdx
@@ -16,6 +16,7 @@ asmSpec :: Spec
 asmSpec = describe "asm generation" $ do
     pushSpec
     popSpec
+    intValSpec
     defSpec
     assignSpec
     assignArrElemSpec
@@ -38,6 +39,30 @@ popSpec = describe "pop" $ do
                  , LoadIdx { r=3, base=sp, offset=(-2)}
                  , SubI sp sp 2]
         runSt empty (pop [1, 3]) `shouldBe` exp
+
+intValSpec :: Spec
+intValSpec = describe "int val" $ do
+    it "generates asm for variable" $ do
+        let ast = AST.Var "x"
+            (reg, env) = Env.takeEnvReg (Env.fromVars [("x", 5)])
+            exp = [LoadIdx { r=reg, base=bp, offset=5 }]
+        runSt env (intVal ast reg) `shouldBe` exp
+
+    it "generates asm for literal" $ do
+        let ast = AST.Lit 5
+            exp = [MoveI 0 5]
+        runSt empty (intVal ast 0) `shouldBe` exp
+
+    it "generates asm for function result" $ do
+        pending
+
+    it "generates asm for array access" $ do
+        let ast = AST.ArrAccess "xs" (AST.Lit 5)
+            (reg, env) = Env.takeEnvReg (Env.fromVars [("xs", 7)])
+            exp = [LoadIdx { r=reg, base=bp, offset=7 }
+                 , MoveI 1 5
+                 , LoadBaseIdx { r=reg, base=0, rOffset=1 }]
+        runSt env (intVal ast reg) `shouldBe` exp
 
 defSpec :: Spec
 defSpec = describe "def" $ do
