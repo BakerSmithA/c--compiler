@@ -133,7 +133,16 @@ println = return [PrintLn]
 -- Return instructions to store either int value in register, or pointer to array.
 defVal :: AST.DefVal -> RegIdx -> St [Instr]
 defVal (AST.DefInt val)   reg = intVal val reg
-defVal (AST.DefArr elems) reg = error "cannot define array"
+defVal (AST.DefArr elems) reg = arrPtr elems reg
+
+-- Return instructions to push elements of array onto stack and store a pointer
+-- to the start of the array in reg.
+arrPtr :: [AST.IntVal] -> RegIdx -> St [Instr]
+arrPtr elems reg = do
+    sp <- Env.sp
+    let saveStart = Move reg sp
+    pushAsm <- seqPush elems
+    return (saveStart:pushAsm)
 
 -- Return instructions to store int value in supplied register.
 intVal :: AST.IntVal -> RegIdx -> St [Instr]
@@ -222,6 +231,18 @@ push regs = do
         stores = map store (zip regs [0..])
         incSp  = AddI sp sp (fromIntegral $ length regs)
     return (stores ++ [incSp])
+
+-- Compute each int value individually and push onto stack. Fewer registers than
+-- `push` as not all int values are held in registers at the same time. However,
+-- requires more sp update instructions.
+seqPush :: [AST.IntVal] -> St [Instr]
+seqPush vals = Env.tempReg $ \reg -> seqPush' vals reg where
+    seqPush' []         _   = return []
+    seqPush' (val:vals) reg = do
+        valAsm  <- intVal val reg
+        pushAsm <- push [reg]
+        restAsm <- seqPush' vals reg
+        return (valAsm ++ pushAsm ++ restAsm)
 
 -- Pop values from the top of the stack into registers.
 -- Assumes sp points to free address on top of stack.
