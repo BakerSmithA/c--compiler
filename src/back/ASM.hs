@@ -25,15 +25,42 @@ stm (AST.PrintLn) = println
 
 -- Calculates int value and populates return register with it.
 ret :: AST.IntVal -> St [Instr]
-ret = undefined
+ret val = do
+    reg <- Env.ret
+    intVal val reg
 
--- Calculates int value and stores on stack.
+-- Calculates int value and stores on stack. Also advances stack pointer.
+-- E.g. Before def x=1
+--      -----------
+--      |    1    |
+--      |    4    |
+--      |         | <- SP
+--      -----------
+--
+-- After:
+--      -----------
+--      |    1    |
+--      |    4    |
+--      |    X    |
+--      |         | <- SP
+--      -----------
 def :: AST.VarName -> AST.DefVal -> St [Instr]
-def = undefined
+def name val = do
+    bpOffset <- Env.putVar name
+    storeVar bpOffset val
 
 -- Calculates int value and reassigns existing value on stack.
 assign :: AST.VarName -> AST.DefVal -> St [Instr]
-assign = undefined
+assign name val = do
+    bpOffset <- Env.getVarOffset name
+    storeVar bpOffset val
+
+-- Calculates int value and stores value on stack at given offset from bp.
+storeVar :: Val -> AST.DefVal -> St [Instr]
+storeVar bpOffset val = Env.tempReg $ \reg -> do
+    bp <- Env.bp
+    valAsm <- defVal val reg
+    return (valAsm ++ [StoreIdx reg bp bpOffset])
 
 -- Calculates offset into array and int value and reassigns element.
 assignArr :: AST.VarName -> AST.IntVal -> AST.IntVal -> St [Instr]
@@ -67,6 +94,11 @@ printAsm = undefined
 println :: St [Instr]
 println = undefined
 
+-- Return instructions to store either int value in register, or pointer to array.
+defVal :: AST.DefVal -> RegIdx -> St [Instr]
+defVal (AST.DefInt val)   reg = intVal val reg
+defVal (AST.DefArr elems) reg = error "cannot define array"
+
 -- Return instructions to store int value in supplied register.
 intVal :: AST.IntVal -> RegIdx -> St [Instr]
 intVal (AST.Var name)           = var name
@@ -75,16 +107,6 @@ intVal (AST.Result func)        = callResult func
 intVal (AST.ArrAccess name idx) = arrAccess name idx
 intVal (AST.Add val1 val2)      = op Add intVal val1 val2
 intval (AST.Sub val1 val2)      = op Sub intVal val1 val2
-
--- data BoolVal = TRUE
---              | FALSE
---              | Eq IntVal IntVal
---              | NEq IntVal IntVal
---              | Lt IntVal IntVal
---              | Gt IntVal IntVal
---              | Or BoolVal BoolVal
---              | And BoolVal BoolVal
---              deriving (Eq, Show)
 
 -- Return instructions to store bool value in supplied register.
 boolVal :: AST.BoolVal -> RegIdx -> St [Instr]
