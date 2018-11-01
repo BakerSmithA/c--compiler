@@ -5,6 +5,9 @@ import Back.Env (St)
 import qualified Back.Env as Env
 import Back.Instr
 
+-- Takes result register and two operand registers.
+type BinOp = RegIdx -> RegIdx -> RegIdx -> Instr
+
 stm :: AST.Stm -> St [Instr]
 stm (AST.Return val) = ret val
 stm (AST.Def name val) = def name val
@@ -70,6 +73,8 @@ intVal (AST.Var name)           = var name
 intVal (AST.Lit x)              = lit x
 intVal (AST.Result func)        = callResult func
 intVal (AST.ArrAccess name idx) = arrAccess name idx
+intVal (AST.Add val1 val2)      = op Add intVal val1 val2
+intval (AST.Sub val1 val2)      = op Sub intVal val1 val2
 
 -- Return instructions to load variable/function argument into register.
 var :: AST.VarName -> RegIdx -> St [Instr]
@@ -97,6 +102,14 @@ arrAccess name idx reg = Env.tempReg $ \idxReg -> do
     idxAsm <- intVal idx idxReg
     let load = LoadBaseIdx reg reg idxReg
     return (startAsm ++ idxAsm ++ [load])
+
+-- Return instructions to perform an operation using the two values as operands.
+-- The result is stored in the supplied register.
+op :: BinOp -> (a -> RegIdx -> St [Instr]) -> a -> a -> RegIdx -> St [Instr]
+op f convert val1 val2 reg1 = Env.tempReg $ \reg2 -> do
+    asm1 <- convert val1 reg1
+    asm2 <- convert val2 reg2
+    return (asm1 ++ asm2 ++ [f reg1 reg1 reg2])
 
 -- Push the values in the registers to the top of the stack.
 -- Assumes sp points to next free address on stack.
