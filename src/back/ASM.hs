@@ -10,7 +10,9 @@ import Control.Monad.State (get)
 type BinOp = RegIdx -> RegIdx -> RegIdx -> Instr
 
 prog :: [AST.FuncDef] -> St [Instr]
-prog [AST.FuncDef _ _ _ body] = stm body
+prog [AST.FuncDef _ _ _ body] = do
+    bodyAsm <- stm body
+    return (bodyAsm ++ [SysCall])
 
 -- prog funcs =
 --     let (setup, env) = setupAsm Env.empty

@@ -1,0 +1,14 @@
+def main() {
+    let xs = [2, 3, 5, 6]
+    print(xs[0])
+    print(xs[1])
+    print(xs[2])
+    print(xs[3])
+    println()
+    
+    xs[2] = 100
+    print(xs[0])
+    print(xs[1])
+    print(xs[2])
+    print(xs[3])
+}
