@@ -26,6 +26,9 @@ data Env = Env {
     -- Offset of where variables/arguments are stored on the stack, relative to
     -- base pointer (bp).
   , varBpOffset :: Map VarName Val
+    -- Current offset past base pointer. Works like stack pointer, but during
+    -- compile time used to keep track of where variables are located on stack.
+  , bpOffset :: Val
     -- Used to generate fresh labels for branch locations.
   , currLabel :: Int
 }
@@ -35,7 +38,7 @@ type St a = State Env a
 
 -- environment with no variables, arguments, or used labels.
 empty :: Env
-empty = Env 14 15 16 17 (Set.fromList [0..13]) Map.empty 0
+empty = Env 14 15 16 17 (Set.fromList [0..13]) Map.empty 0 0
 
 -- Return index of stack pointer register.
 sp :: St RegIdx
@@ -97,6 +100,12 @@ tempReg f = do
     res <- f reg
     freeReg reg
     return res
+
+-- Increment offset past base pointer. Used to keep track of where variables are
+-- stored on the stack.
+incBpOffset :: Val -> St ()
+incBpOffset delta = modify $ \env ->
+    env { bpOffset = (bpOffset env) + delta }
 
 runSt :: Env -> St a -> a
 runSt env st = fst (runState st env)

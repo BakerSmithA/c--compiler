@@ -221,6 +221,7 @@ push regs = do
     let store (idx, offset) = StoreIdx idx sp offset
         stores = map store (zip regs [0..])
         incSp  = AddI sp sp (fromIntegral $ length regs)
+    Env.incBpOffset (fromIntegral $ length regs)
     return (stores ++ [incSp])
 
 -- Compute each int value individually and push onto stack. Fewer registers than
@@ -261,4 +262,5 @@ pop regs = do
     let load (idx, offset) = LoadIdx idx sp (-offset)
         loads = map load (zip regs [1..])
         decSp = SubI sp sp (fromIntegral $ length regs)
+    Env.incBpOffset (-(fromIntegral $ length regs))
     return (loads ++ [decSp])

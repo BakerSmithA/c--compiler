@@ -10,7 +10,7 @@ sp :: RegIdx
 sp = 14
 
 bp :: RegIdx
-bp =16
+bp = 16
 
 asmSpec :: Spec
 asmSpec = describe "asm generation" $ do
@@ -23,16 +23,8 @@ defSpec = describe "def" $ do
     it "generates asm for def int" $ do
         let ast = (AST.Def "x" (AST.DefInt (AST.Lit 2)))
             exp = [MoveI 0 2
-                 , StoreIdx { r=0, base=bp, offset=0 }]
-        runSt empty (stm ast) `shouldBe` exp
-
-    it "increments offset after bp for multiple int definitions" $ do
-        let def n x = (AST.Def n (AST.DefInt (AST.Lit x)))
-            ast = AST.Comp (def "x" 2) (def "y" 3)
-            exp = [MoveI 0 2
-                 , StoreIdx { r=0, base=bp, offset=0 }
-                 , MoveI 0 3
-                 , StoreIdx { r=0, base=bp, offset=1 }]
+                 , StoreIdx { r=0, base=sp, offset=0 }
+                 , AddI sp sp 1]
         runSt empty (stm ast) `shouldBe` exp
 
     it "generates asm for def arr" $ do
@@ -40,14 +32,15 @@ defSpec = describe "def" $ do
             ast   = (AST.Def "x" (AST.DefArr elems))
             exp   = [Move 0 sp -- Save start address.
 
-                   , MoveI 0 1 -- Push elements of array.
-                   , StoreIdx { r=0, base=sp, offset=0 }
+                   , MoveI 1 1 -- Push elements of array.
+                   , StoreIdx { r=1, base=sp, offset=0 }
                    , AddI sp sp 1
-                   , MoveI 0 2
-                   , StoreIdx { r=0, base=sp, offset=0 }
+                   , MoveI 1 2
+                   , StoreIdx { r=1, base=sp, offset=0 }
                    , AddI sp sp 1
 
-                   , StoreIdx 0 bp 2] -- Save start index to stack in variable.
+                   , StoreIdx { r=0, base=sp, offset=0} -- Store start of array address on stack.
+                   , AddI sp sp 1]
 
         runSt empty (stm ast) `shouldBe` exp
 
