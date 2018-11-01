@@ -9,6 +9,27 @@ import Control.Monad.State (get)
 -- Takes result register and two operand registers.
 type BinOp = RegIdx -> RegIdx -> RegIdx -> Instr
 
+prog :: [AST.FuncDef] -> St [Instr]
+prog [AST.FuncDef _ _ _ body] = stm body
+
+-- prog funcs =
+--     let (setup, env) = setupAsm Env.empty
+--     in setup ++ funcDefs funcs env ++ [SysCall]
+
+-- setupAsm :: ASMEnv -> ([Instr], ASMEnv)
+-- setupAsm env = (pushLrAsm ++ callMainAsm, env) where
+--     callMainAsm = [B "main"]
+--     pushLrAsm = [MoveLabel linkReg EndAddr] -- After main returns, jump to end of program.
+--     linkReg = Env.lrIdx env
+
+-- funcDefs :: [FuncDef] -> ASMEnv -> [Instr]
+-- funcDefs funcs env = fst $ foldl f ([], env) funcs where
+--     f :: ([Instr], ASMEnv) -> FuncDef -> ([Instr], ASMEnv)
+--     f (instrs, env) (FuncDef name args retType body) =
+--         let argNames = map varName args
+--             (instrs', env') = stm body (Env.inFunc argNames env)
+--         in (instrs ++ [I.Label name] ++ instrs' ++ [I.Ret], Env.restore env env')
+
 stm :: AST.Stm -> St [Instr]
 stm (AST.Return val) = ret val
 stm (AST.Def name val) = def name val
