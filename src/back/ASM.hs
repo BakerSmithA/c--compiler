@@ -114,7 +114,7 @@ while cond body = Env.tempReg $ \condReg -> do
 
 -- Return ASM for performing function call.
 call :: AST.FuncCall -> St [Instr]
-call = undefined
+call = error "call not implemented"
 
 -- Return ASM for performing one statement after another.
 comp :: AST.Stm -> AST.Stm -> St [Instr]

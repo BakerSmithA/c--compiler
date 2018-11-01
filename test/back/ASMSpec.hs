@@ -19,6 +19,23 @@ asmSpec = describe "asm generation" $ do
     defSpec
     assignSpec
     assignArrElemSpec
+    ifSpec
+
+pushSpec :: Spec
+pushSpec = describe "push" $ do
+    it "generates asm" $ do
+        let exp = [StoreIdx { r=1, base=sp, offset=0 }
+                 , StoreIdx { r=3, base=sp, offset=1 }
+                 , AddI sp sp 2]
+        runSt empty (push [1, 3]) `shouldBe` exp
+
+popSpec :: Spec
+popSpec = describe "pop" $ do
+    it "generates asm" $ do
+        let exp = [LoadIdx { r=1, base=sp, offset=(-1)}
+                 , LoadIdx { r=3, base=sp, offset=(-2)}
+                 , SubI sp sp 2]
+        runSt empty (pop [1, 3]) `shouldBe` exp
 
 defSpec :: Spec
 defSpec = describe "def" $ do
@@ -77,18 +94,13 @@ assignArrElemSpec = describe "assign array elem" $ do
                  , StoreBaseIdx { r=2, base=0, rOffset=1 }]
         runSt env (stm ast) `shouldBe` exp
 
-pushSpec :: Spec
-pushSpec = describe "push" $ do
-    it "generates asm" $ do
-        let exp = [StoreIdx { r=1, base=sp, offset=0 }
-                 , StoreIdx { r=3, base=sp, offset=1 }
-                 , AddI sp sp 2]
-        runSt empty (push [1, 3]) `shouldBe` exp
-
-popSpec :: Spec
-popSpec = describe "pop" $ do
-    it "generates asm" $ do
-        let exp = [LoadIdx { r=1, base=sp, offset=(-1)}
-                 , LoadIdx { r=3, base=sp, offset=(-2)}
-                 , SubI sp sp 2]
-        runSt empty (pop [1, 3]) `shouldBe` exp
+ifSpec :: Spec
+ifSpec = describe "if" $ do
+    it "generates asm to perform conditional statement" $ do
+        let ast = AST.If AST.FALSE (AST.Print (AST.Lit 5))
+            exp = [MoveI 0 0
+                 , BF 0 "0"
+                 , MoveI 1 5
+                 , Print 1
+                 , Label "0"]
+        runSt empty (stm ast) `shouldBe` exp
