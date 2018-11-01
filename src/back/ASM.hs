@@ -66,25 +66,37 @@ println = undefined
 
 -- Return instructions to store int term in supplied register.
 intVal :: AST.IntVal -> RegIdx -> St [Instr]
-intVal (AST.Var name) reg = var name reg
-intVal (AST.Lit x) reg =
-    return [MoveI reg (fromIntegral x)]
-intVal (AST.Result func) reg = do
-    ret     <- Env.ret
-    callAsm <- call func
-    let copy = Move reg ret
-    return (callAsm ++ [copy])
-intVal (AST.ArrAccess name idx) reg = Env.tempReg $ \idxReg -> do
-    startAsm <- var name reg
-    idxAsm <- intVal idx idxReg
-    let load = LoadBaseIdx reg reg idxReg
-    return (startAsm ++ idxAsm ++ [load])
+intVal (AST.Var name)           = var name
+intVal (AST.Lit x)              = lit x
+intVal (AST.Result func)        = callResult func
+intVal (AST.ArrAccess name idx) = arrAccess name idx
 
 -- Return instructions to load variable/function argument into register.
 var :: AST.VarName -> RegIdx -> St [Instr]
 var name reg = do
-    addr <- Env.getVar name
-    return [MoveI reg (fromIntegral addr), LoadIdx reg reg 0]
+    bp <- Env.bp
+    offset <- Env.getVarOffset name
+    return [LoadIdx reg bp offset]
+
+-- Return instructions to store an int literal in a register.
+lit :: Int -> RegIdx -> St [Instr]
+lit x reg = return [MoveI reg (fromIntegral x)]
+
+-- Return instructions to perform function call and store returned value in register.
+callResult :: AST.FuncCall -> RegIdx -> St [Instr]
+callResult func reg = do
+    ret     <- Env.ret
+    callAsm <- call func
+    let copy = Move reg ret
+    return (callAsm ++ [copy])
+
+-- Return instructions to access array element and store value in register.
+arrAccess :: AST.VarName -> AST.IntVal -> RegIdx -> St [Instr]
+arrAccess name idx reg = Env.tempReg $ \idxReg -> do
+    startAsm <- var name reg
+    idxAsm <- intVal idx idxReg
+    let load = LoadBaseIdx reg reg idxReg
+    return (startAsm ++ idxAsm ++ [load])
 
 -- Push the values in the registers to the top of the stack.
 -- Assumes sp points to next free address on stack.

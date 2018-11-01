@@ -23,8 +23,9 @@ data Env = Env {
   , retIdx :: RegIdx
   -- Registers that are not in-use.
   , freeRegs :: Set RegIdx
-    -- Where variables/arguments are stored on the stack.
-  , varAddr :: Map VarName Addr
+    -- Offset of where variables/arguments are stored on the stack, relative to
+    -- base pointer (bp).
+  , varBpOffset :: Map VarName Val
     -- Used to generate fresh labels for branch locations.
   , currLabel :: Int
 }
@@ -54,16 +55,16 @@ ret = fmap retIdx get
 
 -- Returns address associated with variable, or crashes if address not associated
 -- with variable.
-getVar :: VarName -> St Addr
-getVar name = do
+getVarOffset :: VarName -> St Val
+getVarOffset name = do
     env <- get
-    let addr = Map.lookup name (varAddr env)
+    let addr = Map.lookup name (varBpOffset env)
     return (fromJust addr)
 
 -- Keeps track of a variable and associated stack address.
-putVar :: VarName -> Addr -> St ()
-putVar name addr = modify $ \env ->
-    env { varAddr = Map.insert name addr (varAddr env) }
+putVarOffset :: VarName -> Val -> St ()
+putVarOffset name offset = modify $ \env ->
+    env { varBpOffset = Map.insert name offset (varBpOffset env) }
 
 -- Returns a fresh label to use as a branch location.
 freshLabel :: St String
