@@ -3,6 +3,7 @@ module Back.ASMSpec where
 import Test.Hspec
 import qualified Front.AST as AST
 import Back.ASM
+import Back.Env (Env)
 import Back.Env as Env (runSt, empty, fromVars, takeEnvReg)
 import Back.Instr
 
@@ -12,11 +13,16 @@ sp = 14
 bp :: RegIdx
 bp = 16
 
+-- Take register from empty environment.
+takeEmptyEnv :: Env
+takeEmptyEnv = snd (Env.takeEnvReg Env.empty)
+
 asmSpec :: Spec
 asmSpec = describe "asm generation" $ do
     pushSpec
     popSpec
     intValSpec
+    boolValSpec
     defSpec
     assignSpec
     assignArrElemSpec
@@ -50,8 +56,9 @@ intValSpec = describe "int val" $ do
 
     it "generates asm for literal" $ do
         let ast = AST.Lit 5
+            env = takeEmptyEnv
             exp = [MoveI 0 5]
-        runSt empty (intVal ast 0) `shouldBe` exp
+        runSt env (intVal ast 0) `shouldBe` exp
 
     it "generates asm for function result" $ do
         pending
@@ -66,12 +73,35 @@ intValSpec = describe "int val" $ do
 
     it "generates asm for add and sub" $ do
         let ast = AST.Sub (AST.Add (AST.Lit 2) (AST.Lit 5)) (AST.Lit 3)
+            env = takeEmptyEnv
             exp = [MoveI 0 2
-                 , MoveI 1 5
-                 , Add 0 0 1
+                 , MoveI 2 5
+                 , Add 0 0 2
                  , MoveI 1 3
                  , Sub 0 0 1]
-        runSt empty (intVal ast 0) `shouldBe` exp
+        runSt env (intVal ast 0) `shouldBe` exp
+
+boolValSpec :: Spec
+boolValSpec = describe "bool value" $ do
+    it "generates asm for true" $ do
+        let ast = AST.TRUE
+            env = takeEmptyEnv
+            exp = [MoveI 0 1]
+        runSt env (boolVal ast 0) `shouldBe` exp
+
+    it "generates asm for false" $ do
+        let ast = AST.FALSE
+            env = takeEmptyEnv
+            exp = [MoveI 0 0]
+        runSt env (boolVal ast 0) `shouldBe` exp
+
+    it "generates asm for eq" $ do
+        let ast = AST.Eq (AST.Lit 1) (AST.Lit 2)
+            env = takeEmptyEnv
+            exp = [MoveI 0 1
+                 , MoveI 1 2
+                 , Eq 0 0 1]
+        runSt env (boolVal ast 0) `shouldBe` exp
 
 defSpec :: Spec
 defSpec = describe "def" $ do
