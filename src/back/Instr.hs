@@ -68,6 +68,7 @@ data Instr
     -- Branching
     | B  { label :: Label }              -- Unconditional branch to label.
     | BT { r :: RegIdx, label :: Label } -- Branch to label if r == 1
+    | BF { r :: RegIdx, label :: Label } -- Branch to label if r == 0
     | Ret                                -- Branch to address in link register.
     | SysCall                            -- Terminates execution.
     -- Debugging
@@ -115,6 +116,7 @@ encoded (Not r x)    _ = [15, r, x]
 -- Branching
 encoded (B label)    d = [10]    ++ encodeW32 (addr label d)
 encoded (BT r label) d = [11, r] ++ encodeW32 (addr label d)
+encoded (BF r label) d = error "BF not implemented"
 encoded (Ret)        _ = [12]
 encoded (SysCall)    _ = [21]
 -- Debugging

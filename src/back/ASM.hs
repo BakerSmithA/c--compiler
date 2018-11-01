@@ -75,15 +75,36 @@ assignArr name idx val =
 
 -- Returns ASM for conditional execution of a single branch.
 ifAsm :: AST.BoolVal -> AST.Stm -> St [Instr]
-ifAsm = undefined
+ifAsm cond body = Env.tempReg $ \condReg -> do
+    label   <- Env.freshLabel
+    condAsm <- boolVal cond condReg
+    let branchAsm = [BF condReg label]
+    bodyAsm <- stm body
+    return (condAsm ++ branchAsm ++ bodyAsm ++ [Label label])
 
 -- Return ASM for conditional execution of 'then' or 'else' branch.
 ifElse :: AST.BoolVal -> AST.Stm -> AST.Stm -> St [Instr]
-ifElse = undefined
+ifElse cond sThen sElse = Env.tempReg $ \condReg -> do
+    elseLabel <- Env.freshLabel
+    exitLabel <- Env.freshLabel
+    condAsm   <- boolVal cond condReg
+    let branchAsm = [BF condReg elseLabel]
+    thenAsm <- stm sThen
+    let postThenAsm = [B exitLabel, Label elseLabel]
+    elseAsm <- stm sElse
+    let postElseAsm = [Label exitLabel]
+    return (condAsm ++ branchAsm ++ thenAsm ++ postThenAsm ++ elseAsm ++ postElseAsm)
 
 -- Return ASM for while loop.
 while :: AST.BoolVal -> AST.Stm -> St [Instr]
-while = undefined
+while cond body = Env.tempReg $ \condReg -> do
+    enterLabel <- Env.freshLabel
+    exitLabel  <- Env.freshLabel
+    condAsm    <- boolVal cond condReg
+    bodyAsm    <- stm body
+    return (condAsm ++ [BF condReg exitLabel, Label enterLabel]
+         ++ bodyAsm
+         ++ condAsm ++ [BT condReg enterLabel, Label exitLabel])
 
 -- Return ASM for performing function call.
 call :: AST.FuncCall -> St [Instr]
