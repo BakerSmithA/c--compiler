@@ -64,7 +64,14 @@ storeVar bpOffset val = Env.tempReg $ \reg -> do
 
 -- Calculates offset into array and int value and reassigns element.
 assignArr :: AST.VarName -> AST.IntVal -> AST.IntVal -> St [Instr]
-assignArr = undefined
+assignArr name idx val =
+    Env.tempReg $ \startReg ->
+    Env.tempReg $ \idxReg ->
+    Env.tempReg $ \valReg -> do
+        startAsm <- var name startReg
+        idxAsm   <- intVal idx idxReg
+        valAsm   <- intVal val valReg
+        return (startAsm ++ idxAsm ++ valAsm ++ [StoreBaseIdx valReg startReg idxReg])
 
 -- Returns ASM for conditional execution of a single branch.
 ifAsm :: AST.BoolVal -> AST.Stm -> St [Instr]
