@@ -65,24 +65,20 @@ println :: St [Instr]
 println = undefined
 
 -- Return instructions to store int term in supplied register.
-intTerm :: AST.IntTerm -> RegIdx -> St [Instr]
-intTerm (AST.Var name) reg = var name reg
-intTerm (AST.Lit x) reg =
+intVal :: AST.IntVal -> RegIdx -> St [Instr]
+intVal (AST.Var name) reg = var name reg
+intVal (AST.Lit x) reg =
     return [MoveI reg (fromIntegral x)]
-intTerm (AST.Result func) reg = do
+intVal (AST.Result func) reg = do
     ret     <- Env.ret
     callAsm <- call func
     let copy = Move reg ret
     return (callAsm ++ [copy])
-intTerm (AST.ArrAccess name idx) reg = Env.tempReg $ \idxReg -> do
+intVal (AST.ArrAccess name idx) reg = Env.tempReg $ \idxReg -> do
     startAsm <- var name reg
     idxAsm <- intVal idx idxReg
     let load = LoadBaseIdx reg reg idxReg
     return (startAsm ++ idxAsm ++ [load])
-intTerm (AST.Parens val) reg = intVal val reg
-
-intVal :: AST.IntVal -> RegIdx -> St [Instr]
-intVal = undefined
 
 -- Return instructions to load variable/function argument into register.
 var :: AST.VarName -> RegIdx -> St [Instr]

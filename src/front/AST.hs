@@ -18,34 +18,22 @@ varName (TypedVar name _) = name
 data FuncCall = FuncCall FuncName [IntVal]
               deriving (Eq, Show)
 
-data IntTerm = Var VarName
-             | Lit Int
-             | Result FuncCall
-             | ArrAccess VarName IntVal
-             | Parens IntVal
-             deriving (Eq, Show)
-
-data IntOp = Add  IntTerm
-           | Sub  IntTerm
-           | Mult IntTerm
-           deriving (Eq, Show)
-
-data IntVal = IntVal IntTerm [IntOp]
+data IntVal = Var VarName
+            | Lit Int
+            | Result FuncCall
+            | ArrAccess VarName IntVal
+            | Add IntVal IntVal
+            | Sub IntVal IntVal
             deriving (Eq, Show)
 
-data BoolTerm = TRUE
-              | FALSE
-              | Eq IntVal IntVal
-              | NEq IntVal IntVal
-              | Lt IntVal IntVal
-              | Gt IntVal IntVal
-              deriving (Eq, Show)
-
-data BoolOp = Or BoolTerm
-            | And BoolTerm
-            deriving (Eq, Show)
-
-data BoolVal = BoolVal BoolTerm [BoolOp]
+data BoolVal = TRUE
+             | FALSE
+             | Eq IntVal IntVal
+             | NEq IntVal IntVal
+             | Lt IntVal IntVal
+             | Gt IntVal IntVal
+             | Or BoolVal BoolVal
+             | And BoolVal BoolVal
              deriving (Eq, Show)
 
 data Range = IntRange IntVal IntVal

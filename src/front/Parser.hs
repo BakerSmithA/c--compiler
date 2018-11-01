@@ -132,34 +132,31 @@ typedVar = TypedVar <$> snakeId <* tok ":" <*> dtype
 funcCall :: Parser FuncCall
 funcCall = FuncCall <$> snakeId <*> parens (commaSep intVal)
 
-intTerm :: Parser IntTerm
-intTerm = try (ArrAccess <$> snakeId <*> square intVal)
+intVal' :: Parser IntVal
+intVal' = try (ArrAccess <$> snakeId <*> square intVal)
      <|> try (Result <$> funcCall)
      <|> Var <$> snakeId
      <|> Lit <$> num
-     <|> Parens <$> parens intVal
 
-intOp :: Parser IntOp
-intOp = Add  <$ tok "+" <*> intTerm
-    <|> Sub  <$ tok "-" <*> intTerm
-    <|> Mult <$ tok "*" <*> intTerm
+intOps :: [[Operator Parser IntVal]]
+intOps = [[InfixL (Add <$ tok "+"), InfixL (Sub <$ tok "-")]]
 
 intVal :: Parser IntVal
-intVal = IntVal <$> intTerm <*> many intOp
+intVal = makeExprParser intVal' intOps
 
-boolTerm :: Parser BoolTerm
-boolTerm = TRUE <$ tok "True"
+boolVal' :: Parser BoolVal
+boolVal' = TRUE <$ tok "True"
        <|> FALSE <$ tok "False"
        <|> try (Eq <$> intVal <* tok "==" <*> intVal)
        <|> try (NEq <$> intVal <* tok "!=" <*> intVal)
        <|> try (Lt <$> intVal <* tok "<" <*> intVal)
+       <|> Gt <$> intVal <* tok ">" <*> intVal
 
-boolOp :: Parser BoolOp
-boolOp = Or <$ tok "or" <*> boolTerm
-     <|> And <$ tok "and" <*> boolTerm
+boolOps :: [[Operator Parser BoolVal]]
+boolOps = [[InfixL (Or <$ tok "or"), InfixL (And <$ tok "and")]]
 
 boolVal :: Parser BoolVal
-boolVal = BoolVal <$> boolTerm <*> many boolOp
+boolVal = makeExprParser boolVal' boolOps
 
 range :: Parser Range
 range = IntRange <$> intVal <* tok "..<" <*> intVal

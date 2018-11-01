@@ -7,13 +7,13 @@ import Front.AST
 import Front.Parser (funcDefs)
 
 lit :: Int -> IntVal
-lit x = IntVal (Lit x) []
+lit x = Lit x
 
 var :: VarName -> IntVal
-var name = IntVal (Var name) []
+var name = Var name
 
 result :: FuncCall -> IntVal
-result call = IntVal (Result call) []
+result call = Result call
 
 parserSpec :: Spec
 parserSpec = do
@@ -56,7 +56,7 @@ parserSpec = do
 
             it "parses int ops" $ do
                 let s = "def f() { return 1 + 2 - 3}"
-                    exp = FuncDef "f" [] Nothing (Return (IntVal (Lit 1) [Add (Lit 2), Sub (Lit 3)]))
+                    exp = FuncDef "f" [] Nothing (Return (Sub (Add (Lit 1) (Lit 2)) (Lit 3)))
                 runParser funcDefs "" s `shouldParse` [exp]
 
         context "parses program with" $ do
