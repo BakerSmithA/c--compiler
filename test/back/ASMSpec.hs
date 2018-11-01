@@ -64,6 +64,15 @@ intValSpec = describe "int val" $ do
                  , LoadBaseIdx { r=reg, base=0, rOffset=1 }]
         runSt env (intVal ast reg) `shouldBe` exp
 
+    it "generates asm for add and sub" $ do
+        let ast = AST.Sub (AST.Add (AST.Lit 2) (AST.Lit 5)) (AST.Lit 3)
+            exp = [MoveI 0 2
+                 , MoveI 1 5
+                 , Add 0 0 1
+                 , MoveI 1 3
+                 , Sub 0 0 1]
+        runSt empty (intVal ast 0) `shouldBe` exp
+
 defSpec :: Spec
 defSpec = describe "def" $ do
     it "generates asm for def int" $ do
