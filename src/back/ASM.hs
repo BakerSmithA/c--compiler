@@ -91,7 +91,10 @@ call = undefined
 
 -- Return ASM for performing one statement after another.
 comp :: AST.Stm -> AST.Stm -> St [Instr]
-comp = undefined
+comp s1 s2 = do
+    s1Asm <- stm s1
+    s2Asm <- stm s2
+    return (s1Asm ++ s2Asm)
 
 -- Return ASM for printing an int value.
 printAsm :: AST.IntVal -> St [Instr]
