@@ -1,0 +1,9 @@
+def main() {
+    if True {
+        print(1)
+    }
+
+    if False {
+        print(2)
+    }
+}

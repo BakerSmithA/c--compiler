@@ -116,7 +116,7 @@ encoded (Not r x)    _ = [15, r, x]
 -- Branching
 encoded (B label)    d = [10]    ++ encodeW32 (addr label d)
 encoded (BT r label) d = [11, r] ++ encodeW32 (addr label d)
-encoded (BF r label) d = error "BF not implemented"
+encoded (BF r label) d = [22, r] ++ encodeW32 (addr label d)
 encoded (Ret)        _ = [12]
 encoded (SysCall)    _ = [21]
 -- Debugging
