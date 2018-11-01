@@ -98,11 +98,13 @@ comp s1 s2 = do
 
 -- Return ASM for printing an int value.
 printAsm :: AST.IntVal -> St [Instr]
-printAsm = undefined
+printAsm val = Env.tempReg $ \reg -> do
+    valAsm <- intVal val reg
+    return (valAsm ++ [Print reg])
 
 -- Return ASM for printing a newline.
 println :: St [Instr]
-println = undefined
+println = return [PrintLn]
 
 -- Return instructions to store either int value in register, or pointer to array.
 defVal :: AST.DefVal -> RegIdx -> St [Instr]
