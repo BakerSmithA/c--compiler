@@ -46,7 +46,11 @@ ret val = do
 --      |         | <- SP
 --      -----------
 def :: AST.VarName -> AST.DefVal -> St [Instr]
-def name val = undefined
+def name val = Env.tempReg $ \reg -> do
+    sp <- Env.sp
+    valAsm <- defVal val reg
+    pushVal <- push [reg]
+    return (valAsm ++ pushVal)
 
 -- Calculates int value and reassigns existing value on stack.
 assign :: AST.VarName -> AST.DefVal -> St [Instr]
