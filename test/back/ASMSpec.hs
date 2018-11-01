@@ -26,6 +26,15 @@ defSpec = describe "def" $ do
                  , StoreIdx { r=0, base=bp, offset=0 }]
         runSt empty (stm ast) `shouldBe` exp
 
+    it "increments offset after bp for multiple int definitions" $ do
+        let def n x = (AST.Def n (AST.DefInt (AST.Lit x)))
+            ast = AST.Comp (def "x" 2) (def "y" 3)
+            exp = [MoveI 0 2
+                 , StoreIdx { r=0, base=bp, offset=0 }
+                 , MoveI 0 3
+                 , StoreIdx { r=0, base=bp, offset=1 }]
+        runSt empty (stm ast) `shouldBe` exp
+
 pushSpec :: Spec
 pushSpec = describe "push" $ do
     it "generates asm" $ do

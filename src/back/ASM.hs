@@ -4,6 +4,7 @@ import qualified Front.AST as AST
 import Back.Env (St)
 import qualified Back.Env as Env
 import Back.Instr
+import Control.Monad.State (get)
 
 -- Takes result register and two operand registers.
 type BinOp = RegIdx -> RegIdx -> RegIdx -> Instr
@@ -46,7 +47,9 @@ ret val = do
 --      -----------
 def :: AST.VarName -> AST.DefVal -> St [Instr]
 def name val = do
-    bpOffset <- Env.putVar name
+    bpOffset <- fmap Env.bpOffset get
+    Env.putVar name bpOffset
+    Env.incBpOffset 1
     storeVar bpOffset val
 
 -- Calculates int value and reassigns existing value on stack.

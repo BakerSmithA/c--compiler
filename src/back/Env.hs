@@ -65,12 +65,9 @@ getVarOffset name = do
 
 -- Keeps track of a variable and associated stack address. Stack address is
 -- calculated as an offset past the base pointer, the offset is returned.
-putVar :: VarName -> St Val
-putVar name = do
-    env <- get
-    let varOffset = bpOffset env
-    put (env { varBpOffset = Map.insert name varOffset (varBpOffset env), bpOffset = varOffset + 1 })
-    return varOffset
+putVar :: VarName -> Val -> St ()
+putVar name offset = modify $ \env ->
+    env { varBpOffset = Map.insert name offset (varBpOffset env) }
 
 -- Increment offset past the base pointer. Used to keep track of where variables
 -- are stored on the stack.
