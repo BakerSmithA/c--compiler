@@ -46,24 +46,11 @@ ret val = do
 --      |         | <- SP
 --      -----------
 def :: AST.VarName -> AST.DefVal -> St [Instr]
-def name val = do
-    bpOffset <- fmap Env.bpOffset get
-    Env.putVar name bpOffset
-    Env.incBpOffset 1
-    storeVar bpOffset val
+def name val = undefined
 
 -- Calculates int value and reassigns existing value on stack.
 assign :: AST.VarName -> AST.DefVal -> St [Instr]
-assign name val = do
-    bpOffset <- Env.getVarOffset name
-    storeVar bpOffset val
-
--- Calculates int value and stores value on stack at given offset from bp.
-storeVar :: Val -> AST.DefVal -> St [Instr]
-storeVar bpOffset val = Env.tempReg $ \reg -> do
-    bp <- Env.bp
-    valAsm <- defVal val reg
-    return (valAsm ++ [StoreIdx reg bp bpOffset])
+assign name val = undefined
 
 -- Calculates offset into array and int value and reassigns element.
 assignArr :: AST.VarName -> AST.IntVal -> AST.IntVal -> St [Instr]
@@ -230,7 +217,6 @@ push regs = do
     let store (idx, offset) = StoreIdx idx sp offset
         stores = map store (zip regs [0..])
         incSp  = AddI sp sp (fromIntegral $ length regs)
-    Env.incBpOffset (fromIntegral $ length regs)
     return (stores ++ [incSp])
 
 -- Compute each int value individually and push onto stack. Fewer registers than
@@ -271,5 +257,4 @@ pop regs = do
     let load (idx, offset) = LoadIdx idx sp (-offset)
         loads = map load (zip regs [1..])
         decSp = SubI sp sp (fromIntegral $ length regs)
-    Env.incBpOffset (-(fromIntegral $ length regs))
     return (loads ++ [decSp])

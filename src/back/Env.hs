@@ -26,8 +26,6 @@ data Env = Env {
     -- Offset of where variables/arguments are stored on the stack, relative to
     -- base pointer (bp).
   , varBpOffset :: Map VarName Val
-    -- Current offset past the base pointer. I.e. bp + bpOffset = sp
-  , bpOffset :: Val
     -- Used to generate fresh labels for branch locations.
   , currLabel :: Int
 }
@@ -37,7 +35,7 @@ type St a = State Env a
 
 -- environment with no variables, arguments, or used labels.
 empty :: Env
-empty = Env 14 15 16 17 (Set.fromList [0..13]) Map.empty 0 0
+empty = Env 14 15 16 17 (Set.fromList [0..13]) Map.empty 0
 
 -- Return index of stack pointer register.
 sp :: St RegIdx
@@ -68,12 +66,6 @@ getVarOffset name = do
 putVar :: VarName -> Val -> St ()
 putVar name offset = modify $ \env ->
     env { varBpOffset = Map.insert name offset (varBpOffset env) }
-
--- Increment offset past the base pointer. Used to keep track of where variables
--- are stored on the stack.
-incBpOffset :: Val -> St ()
-incBpOffset delta = modify $ \env ->
-    env { bpOffset = (bpOffset env) + delta }
 
 -- Returns a fresh label to use as a branch location.
 freshLabel :: St String
