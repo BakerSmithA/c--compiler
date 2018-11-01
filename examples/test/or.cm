@@ -1,0 +1,9 @@
+def main() {
+    if 1 > 2 or 2 < 1 or False {
+        print(1)
+    }
+
+    if 1 < 2 or False or 2 < 1 {
+        print(2)
+    }
+}
