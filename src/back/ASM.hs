@@ -67,7 +67,7 @@ printAsm = undefined
 println :: St [Instr]
 println = undefined
 
--- Return instructions to store int term in supplied register.
+-- Return instructions to store int value in supplied register.
 intVal :: AST.IntVal -> RegIdx -> St [Instr]
 intVal (AST.Var name)           = var name
 intVal (AST.Lit x)              = lit x
@@ -75,6 +75,27 @@ intVal (AST.Result func)        = callResult func
 intVal (AST.ArrAccess name idx) = arrAccess name idx
 intVal (AST.Add val1 val2)      = op Add intVal val1 val2
 intval (AST.Sub val1 val2)      = op Sub intVal val1 val2
+
+-- data BoolVal = TRUE
+--              | FALSE
+--              | Eq IntVal IntVal
+--              | NEq IntVal IntVal
+--              | Lt IntVal IntVal
+--              | Gt IntVal IntVal
+--              | Or BoolVal BoolVal
+--              | And BoolVal BoolVal
+--              deriving (Eq, Show)
+
+-- Return instructions to store bool value in supplied register.
+boolVal :: AST.BoolVal -> RegIdx -> St [Instr]
+boolVal (AST.TRUE)      = lit 1
+boolVal (AST.FALSE)     = lit 0
+boolVal (AST.Eq i1 i2)  = op Eq intVal i1 i2
+boolVal (AST.NEq i1 i2) = notEq i1 i2
+boolVal (AST.Lt i1 i2)  = op Lt intVal i1 i2
+boolVal (AST.Gt i1 i2)  = op Lt intVal i2 i1
+boolVal (AST.Or b1 b2)  = op Or boolVal b1 b2
+boolVal (AST.And b1 b2) = op And boolVal b1 b2
 
 -- Return instructions to load variable/function argument into register.
 var :: AST.VarName -> RegIdx -> St [Instr]
@@ -110,6 +131,12 @@ op f convert val1 val2 reg1 = Env.tempReg $ \reg2 -> do
     asm1 <- convert val1 reg1
     asm2 <- convert val2 reg2
     return (asm1 ++ asm2 ++ [f reg1 reg1 reg2])
+
+-- Return instructions for storing whether v1 and v1 are not equal.
+notEq :: AST.IntVal -> AST.IntVal -> RegIdx -> St [Instr]
+notEq v1 v2 reg = do
+    eqAsm <- op Eq intVal v1 v2 reg
+    return (eqAsm ++ [Not reg reg])
 
 -- Push the values in the registers to the top of the stack.
 -- Assumes sp points to next free address on stack.
