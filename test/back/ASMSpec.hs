@@ -103,6 +103,47 @@ boolValSpec = describe "bool value" $ do
                  , Eq 0 0 1]
         runSt env (boolVal ast 0) `shouldBe` exp
 
+    it "generates asm for not equal" $ do
+        let ast = AST.NEq (AST.Lit 1) (AST.Lit 2)
+            env = takeEmptyEnv
+            exp = [MoveI 0 1
+                 , MoveI 1 2
+                 , Eq 0 0 1
+                 , Not 0 0]
+        runSt env (boolVal ast 0) `shouldBe` exp
+
+    it "generates asm for less-than" $ do
+        let ast = AST.Lt (AST.Lit 1) (AST.Lit 2)
+            env = takeEmptyEnv
+            exp = [MoveI 0 1
+                 , MoveI 1 2
+                 , Lt 0 0 1]
+        runSt env (boolVal ast 0) `shouldBe` exp
+
+    it "generates asm for greater-than" $ do
+        let ast = AST.Gt (AST.Lit 1) (AST.Lit 2)
+            env = takeEmptyEnv
+            exp = [MoveI 0 2
+                 , MoveI 1 1
+                 , Lt 0 0 1]
+        runSt env (boolVal ast 0) `shouldBe` exp
+
+    it "generates asm for or" $ do
+        let ast = AST.Or AST.FALSE AST.TRUE
+            env = takeEmptyEnv
+            exp = [MoveI 0 0
+                 , MoveI 1 1
+                 , Or 0 0 1]
+        runSt env (boolVal ast 0) `shouldBe` exp
+
+    it "generates asm for and" $ do
+        let ast = AST.And AST.FALSE AST.TRUE
+            env = takeEmptyEnv
+            exp = [MoveI 0 0
+                 , MoveI 1 1
+                 , And 0 0 1]
+        runSt env (boolVal ast 0) `shouldBe` exp
+
 defSpec :: Spec
 defSpec = describe "def" $ do
     it "generates asm for def int" $ do
