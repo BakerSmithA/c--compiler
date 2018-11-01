@@ -35,6 +35,22 @@ defSpec = describe "def" $ do
                  , StoreIdx { r=0, base=bp, offset=1 }]
         runSt empty (stm ast) `shouldBe` exp
 
+    it "generates asm for def arr" $ do
+        let elems = [AST.Lit 1, AST.Lit 2]
+            ast   = (AST.Def "x" (AST.DefArr elems))
+            exp   = [Move 0 sp -- Save start address.
+
+                   , MoveI 0 1 -- Push elements of array.
+                   , StoreIdx { r=0, base=sp, offset=0 }
+                   , AddI sp sp 1
+                   , MoveI 0 2
+                   , StoreIdx { r=0, base=sp, offset=0 }
+                   , AddI sp sp 1
+
+                   , StoreIdx 0 bp 2] -- Save start index to stack in variable.
+
+        runSt empty (stm ast) `shouldBe` exp
+
 pushSpec :: Spec
 pushSpec = describe "push" $ do
     it "generates asm" $ do
