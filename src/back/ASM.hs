@@ -50,11 +50,23 @@ def name val = Env.tempReg $ \reg -> do
     sp <- Env.sp
     valAsm <- defVal val reg
     pushVal <- push [reg]
+    bpOffset <- fmap Env.bpOffset get
+    Env.putVar name (bpOffset-1) -- -1 because points to one past top of stack.
     return (valAsm ++ pushVal)
 
 -- Calculates int value and reassigns existing value on stack.
 assign :: AST.VarName -> AST.DefVal -> St [Instr]
-assign name val = undefined
+assign name val = Env.tempReg $ \reg -> do
+    valAsm <- defVal val reg
+    saveAsm <- storeVar name reg
+    return (valAsm ++ saveAsm)
+
+-- Return instructions to store variable in register into memory.
+storeVar :: AST.VarName -> RegIdx -> St [Instr]
+storeVar name reg = do
+    bp <- Env.bp
+    offset <- Env.getVarOffset name
+    return [StoreIdx reg bp offset]
 
 -- Calculates offset into array and int value and reassigns element.
 assignArr :: AST.VarName -> AST.IntVal -> AST.IntVal -> St [Instr]

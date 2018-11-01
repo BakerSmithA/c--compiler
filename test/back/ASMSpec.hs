@@ -17,11 +17,12 @@ asmSpec = describe "asm generation" $ do
     pushSpec
     popSpec
     defSpec
+    assignSpec
 
 defSpec :: Spec
 defSpec = describe "def" $ do
     it "generates asm for def int" $ do
-        let ast = (AST.Def "x" (AST.DefInt (AST.Lit 2)))
+        let ast = AST.Def "x" (AST.DefInt (AST.Lit 2))
             exp = [MoveI 0 2
                  , StoreIdx { r=0, base=sp, offset=0 }
                  , AddI sp sp 1]
@@ -39,9 +40,27 @@ defSpec = describe "def" $ do
                    , StoreIdx { r=1, base=sp, offset=0 }
                    , AddI sp sp 1
 
-                   , StoreIdx { r=0, base=sp, offset=0} -- Store start of array address on stack.
+                   , StoreIdx { r=0, base=sp, offset=0 } -- Store start of array address on stack.
                    , AddI sp sp 1]
 
+        runSt empty (stm ast) `shouldBe` exp
+
+assignSpec :: Spec
+assignSpec = describe "assign" $ do
+    it "generates asm to reassign variable on stack" $ do
+        let def n x = AST.Def n (AST.DefInt (AST.Lit x))
+            assign n x = AST.Assign n (AST.DefInt (AST.Lit x))
+            ast = AST.Comp (AST.Comp (def "x" 2) (def "y" 3)) (assign "y" 4)
+            exp = [MoveI 0 2
+                 , StoreIdx { r=0, base=sp, offset=0 }
+                 , AddI sp sp 1
+
+                 , MoveI 0 3
+                 , StoreIdx { r=0, base=sp, offset=0 }
+                 , AddI sp sp 1
+
+                 , MoveI 0 4
+                 , StoreIdx { r=0, base=bp, offset=1 }]
         runSt empty (stm ast) `shouldBe` exp
 
 pushSpec :: Spec
