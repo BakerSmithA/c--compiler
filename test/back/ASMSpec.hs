@@ -1,6 +1,7 @@
 module Back.ASMSpec where
 
 import Test.Hspec
+import qualified Front.AST as AST
 import Back.ASM
 import Back.Env (runSt, empty)
 import Back.Instr
@@ -8,10 +9,22 @@ import Back.Instr
 sp :: RegIdx
 sp = 14
 
+bp :: RegIdx
+bp =16
+
 asmSpec :: Spec
 asmSpec = describe "asm generation" $ do
     pushSpec
     popSpec
+    defSpec
+
+defSpec :: Spec
+defSpec = describe "def" $ do
+    it "generates asm for def int" $ do
+        let ast = (AST.Def "x" (AST.DefInt (AST.Lit 2)))
+            exp = [MoveI 0 2
+                 , StoreIdx { r=0, base=bp, offset=0 }]
+        runSt empty (stm ast) `shouldBe` exp
 
 pushSpec :: Spec
 pushSpec = describe "push" $ do
