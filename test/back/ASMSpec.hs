@@ -3,7 +3,7 @@ module Back.ASMSpec where
 import Test.Hspec
 import qualified Front.AST as AST
 import Back.ASM
-import Back.Env (runSt, empty)
+import Back.Env as Env (runSt, empty, fromVars)
 import Back.Instr
 
 sp :: RegIdx
@@ -18,6 +18,7 @@ asmSpec = describe "asm generation" $ do
     popSpec
     defSpec
     assignSpec
+    assignArrElemSpec
 
 defSpec :: Spec
 defSpec = describe "def" $ do
@@ -62,6 +63,19 @@ assignSpec = describe "assign" $ do
                  , MoveI 0 4
                  , StoreIdx { r=0, base=bp, offset=1 }]
         runSt empty (stm ast) `shouldBe` exp
+
+assignArrElemSpec :: Spec
+assignArrElemSpec = describe "assign array elem" $ do
+    it "generates asm to reassign array elem" $ do
+        let idx = AST.Lit 2
+            val = AST.Lit 5
+            ast = AST.AssignArr "xs" idx val
+            env = Env.fromVars [("xs", 10)]
+            exp = [LoadIdx { r=0, base=bp, offset=10 }
+                 , MoveI 1 2
+                 , MoveI 2 5
+                 , StoreBaseIdx { r=2, base=0, rOffset=1 }]
+        runSt env (stm ast) `shouldBe` exp
 
 pushSpec :: Spec
 pushSpec = describe "push" $ do

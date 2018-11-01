@@ -36,9 +36,15 @@ data Env = Env {
 -- Uses ASM environment to compute value.
 type St a = State Env a
 
--- environment with no variables, arguments, or used labels.
+-- Environment with no variables, arguments, or used labels.
 empty :: Env
 empty = Env 14 15 16 17 (Set.fromList [0..13]) Map.empty 0 0
+
+-- Environment containing variables at given offset past bp.
+fromVars :: [(VarName, Val)] -> Env
+fromVars = foldr f empty where
+    f :: (VarName, Val) -> Env -> Env
+    f (name, offset) env = env { varBpOffset = Map.insert name offset (varBpOffset env) }
 
 -- Return index of stack pointer register.
 sp :: St RegIdx
