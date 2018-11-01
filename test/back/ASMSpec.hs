@@ -20,6 +20,7 @@ asmSpec = describe "asm generation" $ do
     assignSpec
     assignArrElemSpec
     ifSpec
+    ifElseSpec
 
 pushSpec :: Spec
 pushSpec = describe "push" $ do
@@ -96,11 +97,26 @@ assignArrElemSpec = describe "assign array elem" $ do
 
 ifSpec :: Spec
 ifSpec = describe "if" $ do
-    it "generates asm to perform conditional statement" $ do
+    it "generates asm" $ do
         let ast = AST.If AST.FALSE (AST.Print (AST.Lit 5))
             exp = [MoveI 0 0
                  , BF 0 "0"
                  , MoveI 1 5
                  , Print 1
                  , Label "0"]
+        runSt empty (stm ast) `shouldBe` exp
+
+ifElseSpec :: Spec
+ifElseSpec = describe "if else" $ do
+    it "generates asm" $ do
+        let ast = AST.IfElse AST.TRUE (AST.Print (AST.Lit 5)) (AST.Print (AST.Lit 8))
+            exp = [MoveI 0 1
+                 , BF 0 "0"
+                 , MoveI 1 5
+                 , Print 1
+                 , B "1"
+                 , Label "0"
+                 , MoveI 1 8
+                 , Print 1
+                 , Label "1"]
         runSt empty (stm ast) `shouldBe` exp
