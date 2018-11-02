@@ -318,5 +318,5 @@ block st = state $ \sOld ->
         bpOld      = Env.bpOffset sOld
         bpNew      = Env.bpOffset sNew
         sp         = Env.spIdx sNew
-        decSp      = SubI sp sp 1
+        decSp      = SubI sp sp (bpNew - bpOld)
     in (is ++ [decSp], sRestored)

@@ -1,0 +1,9 @@
+def main() {
+    let xs = [1, 2, 3, 4, 5]
+
+    for let i in 0..<5 {
+        for let j in 0..<5 {
+            
+        }
+    }
+}
