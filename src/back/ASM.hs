@@ -53,6 +53,15 @@ ret val = do
     reg <- Env.ret
     intVal val reg
 
+-- Allocates space for new variables and stores on stack if variable does not
+-- exist. Otherwise, sets new value of existing variable.
+def :: AST.VarName -> AST.DefVal -> St [Instr]
+def name val = do
+    exists <- Env.varExists name
+    if exists
+        then assign name val
+        else allocNew name val
+
 -- Calculates int value and stores on stack. Also advances stack pointer.
 -- E.g. Before def x=1
 --      -----------
@@ -68,8 +77,8 @@ ret val = do
 --      |    X    |
 --      |         | <- SP
 --      -----------
-def :: AST.VarName -> AST.DefVal -> St [Instr]
-def name val = Env.tempReg $ \reg -> do
+allocNew :: AST.VarName -> AST.DefVal -> St [Instr]
+allocNew name val = Env.tempReg $ \reg -> do
     sp <- Env.sp
     valAsm <- defVal val reg
     pushVal <- push [reg]
