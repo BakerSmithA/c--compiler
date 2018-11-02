@@ -1,0 +1,9 @@
+def main() {
+    let x = 1
+    while x < 5 {
+        let y = 0
+        print(y)
+        x = x + 1
+        y = y + 1
+    }
+}

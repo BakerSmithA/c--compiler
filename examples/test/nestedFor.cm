@@ -1,0 +1,10 @@
+def main() {
+    for let i in 0..<5 {
+        for let j in 0..<5 {
+            print(j)
+        }
+        println()
+        print(j)
+        println()
+    }
+}
