@@ -62,6 +62,12 @@ bp = fmap bpIdx get
 ret :: St RegIdx
 ret = fmap retIdx get
 
+-- Returns whether a variable exists in the environment.
+varExists :: VarName -> St Bool
+varExists name = do
+    env <- get
+    return (Map.member name (varBpOffset env))
+
 -- Returns address associated with variable, or crashes if address not associated
 -- with variable.
 getVarOffset :: VarName -> St Val

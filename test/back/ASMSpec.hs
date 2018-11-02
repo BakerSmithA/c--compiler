@@ -154,6 +154,18 @@ defSpec = describe "def" $ do
                  , AddI sp sp 1]
         runSt empty (stm ast) `shouldBe` exp
 
+    it "overwrites existing var if already exists" $ do
+        let def n x = AST.Def n (AST.DefInt (AST.Lit x))
+            ast = AST.Comp (def "x" 2) (def "x" 3)
+            exp = [MoveI 0 2
+                 , StoreIdx { r=0, base=sp, offset=0 }
+                 , AddI sp sp 1
+                 -- Declare same variable again should not cause a new variable
+                 -- to be pushed to stack.
+                 , MoveI 0 3
+                 , StoreIdx { r=0, base=bp, offset=0 }]
+        runSt empty (stm ast) `shouldBe` exp
+
     it "generates asm for def arr" $ do
         let elems = [AST.Lit 1, AST.Lit 2]
             ast   = (AST.Def "x" (AST.DefArr elems))
