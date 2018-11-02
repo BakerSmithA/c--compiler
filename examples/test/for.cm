@@ -1,0 +1,5 @@
+def main() {
+    for let i in 0..<5 {
+        print(i)
+    }
+}
