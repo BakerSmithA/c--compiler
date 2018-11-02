@@ -24,6 +24,7 @@ data IntVal = Var VarName
             | ArrAccess VarName IntVal
             | Add IntVal IntVal
             | Sub IntVal IntVal
+            | Mult IntVal IntVal
             deriving (Eq, Show)
 
 data BoolVal = TRUE

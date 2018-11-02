@@ -1,0 +1,8 @@
+def main() {
+    let n = 6
+    let fac = 1
+    for let i in 1..<n+1 {
+        fac = fac * i
+    }
+    print(fac)
+}
