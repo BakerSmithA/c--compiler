@@ -46,6 +46,13 @@ fromVars = foldr f empty where
     f :: (VarName, Val) -> Env -> Env
     f (name, offset) env = env { varBpOffset = Map.insert name offset (varBpOffset env) }
 
+restoreEnv :: Env -> Env -> Env
+restoreEnv old new = new {
+    freeRegs = (freeRegs old)
+  , varBpOffset = (varBpOffset old)
+  , bpOffset = (bpOffset old)
+}
+
 -- Return index of stack pointer register.
 sp :: St RegIdx
 sp = fmap spIdx get
@@ -122,6 +129,11 @@ tempReg f = do
 incBpOffset :: Val -> St ()
 incBpOffset delta = modify $ \env ->
     env { bpOffset = (bpOffset env) + delta }
+
+-- Restores free registers, mapping from variables to addresses, and bpOffset
+-- after block.
+block :: St a -> St a
+block st = state $ \s -> undefined
 
 runSt :: Env -> St a -> a
 runSt env st = fst (runState st env)
