@@ -64,3 +64,14 @@ data Stm = Return IntVal
 
 data FuncDef = FuncDef FuncName [TypedVar] (Maybe Type) Stm
             deriving (Eq, Show)
+
+-- Transforms for loop into while loop.
+forAsWhile :: VarName -> Range -> Stm -> Stm
+forAsWhile iter (IntRange low high) body =
+    let iterVal = Var iter
+        cond    = NEq iterVal high -- Iterate until iter == (high - 1)
+        incIter = Assign iter (DefInt (Add (Var iter) (Lit 1))) -- iter++
+        body'   = Comp body incIter
+        initial = Def iter (DefInt low)
+        loop    = While cond body'
+    in Comp initial loop
