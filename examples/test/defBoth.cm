@@ -1,0 +1,11 @@
+def main() {
+    let x  = 10
+    let ys = [2, 3, 4]
+    let z  = 11
+
+    print(x)
+    print(ys[0])
+    print(ys[1])
+    print(ys[2])
+    print(z)
+}

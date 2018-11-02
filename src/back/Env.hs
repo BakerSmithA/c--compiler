@@ -130,10 +130,5 @@ incBpOffset :: Val -> St ()
 incBpOffset delta = modify $ \env ->
     env { bpOffset = (bpOffset env) + delta }
 
--- Restores free registers, mapping from variables to addresses, and bpOffset
--- after block.
-block :: St a -> St a
-block st = state $ \s -> undefined
-
 runSt :: Env -> St a -> a
 runSt env st = fst (runState st env)

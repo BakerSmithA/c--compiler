@@ -4,7 +4,7 @@ import qualified Front.AST as AST
 import Back.Env (St)
 import qualified Back.Env as Env
 import Back.Instr
-import Control.Monad.State (get)
+import Control.Monad.State
 
 -- Takes result register and two operand registers.
 type BinOp = RegIdx -> RegIdx -> RegIdx -> Instr
@@ -117,7 +117,7 @@ ifAsm cond body = Env.tempReg $ \condReg -> do
     label   <- Env.freshLabel
     condAsm <- boolVal cond condReg
     let branchAsm = [BF condReg label]
-    bodyAsm <- stm body
+    bodyAsm <- block (stm body)
     return (condAsm ++ branchAsm ++ bodyAsm ++ [Label label])
 
 -- Return ASM for conditional execution of 'then' or 'else' branch.
@@ -127,9 +127,9 @@ ifElse cond sThen sElse = Env.tempReg $ \condReg -> do
     exitLabel <- Env.freshLabel
     condAsm   <- boolVal cond condReg
     let branchAsm = [BF condReg elseLabel]
-    thenAsm <- stm sThen
+    thenAsm <- block (stm sThen)
     let postThenAsm = [B exitLabel, Label elseLabel]
-    elseAsm <- stm sElse
+    elseAsm <- block (stm sElse)
     let postElseAsm = [Label exitLabel]
     return (condAsm ++ branchAsm ++ thenAsm ++ postThenAsm ++ elseAsm ++ postElseAsm)
 
@@ -139,7 +139,7 @@ while cond body = Env.tempReg $ \condReg -> do
     enterLabel <- Env.freshLabel
     exitLabel  <- Env.freshLabel
     condAsm    <- boolVal cond condReg
-    bodyAsm    <- stm body
+    bodyAsm    <- block (stm body)
     return (condAsm ++ [BF condReg exitLabel, Label enterLabel]
          ++ bodyAsm
          ++ condAsm ++ [BT condReg enterLabel, Label exitLabel])
@@ -308,3 +308,15 @@ pop regs = do
         decSp = SubI sp sp (fromIntegral $ length regs)
     Env.incBpOffset (-(fromIntegral $ length regs))
     return (loads ++ [decSp])
+
+-- Restores free registers, mapping from variables to addresses, and bpOffset
+-- after block.
+block :: St [Instr] -> St [Instr]
+block st = state $ \sOld ->
+    let (is, sNew) = runState st sOld
+        sRestored  = Env.restoreEnv sOld sNew
+        bpOld      = Env.bpOffset sOld
+        bpNew      = Env.bpOffset sNew
+        sp         = Env.spIdx sNew
+        decSp      = SubI sp sp 1
+    in (is ++ [decSp], sRestored)
