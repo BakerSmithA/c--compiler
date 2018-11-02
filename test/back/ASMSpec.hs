@@ -29,6 +29,7 @@ asmSpec = describe "asm generation" $ do
     ifSpec
     ifElseSpec
     whileSpec
+    forSpec
 
 pushSpec :: Spec
 pushSpec = describe "push" $ do
@@ -239,4 +240,42 @@ whileSpec = describe "while" $ do
                  , MoveI 0 0
                  , BT 0 "0"
                  , Label "1"]
+        runSt empty (stm ast) `shouldBe` exp
+
+forSpec :: Spec
+forSpec = describe "for" $ do
+    it "generates asm" $ do
+        let range = AST.IntRange (AST.Lit 1) (AST.Lit 5)
+            ast   = AST.For "i" range (AST.Print (AST.Var "i"))
+            exp   = [MoveI { r=0, val=1 } -- Save variable i initial value.
+                   , StoreIdx { r=0, base=sp, offset=0 }
+                   , AddI sp sp 1
+
+                   -- Compare i to upper bound.
+                   , LoadIdx { r=0, base=bp, offset=0 }
+                   , MoveI { r=1, val=5 }
+                   , Lt 0 0 1
+
+                   -- Branch to end if i is already above upper bound.
+                   , BF 0 "1"
+
+                   -- Body of loop.
+                   , Label "0"
+                   , LoadIdx { r=1, base=bp, offset=0 }
+                   , Print 1
+
+                   -- Update i.
+                   , LoadIdx { r=1, base=bp, offset=0 }
+                   , MoveI { r=2, val=1 }
+                   , Add 1 1 2
+                   , StoreIdx { r=1, base=bp, offset=0 }
+
+                   -- Check whether i is past upper bound. Branch to start if not.
+                   , LoadIdx { r=0, base=bp, offset=0 }
+                   , MoveI { r=1, val=5 }
+                   , Lt 0 0 1
+                   , BT 0 "0"
+
+                   -- Exit
+                   , Label "1"]
         runSt empty (stm ast) `shouldBe` exp

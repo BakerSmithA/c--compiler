@@ -69,7 +69,7 @@ data FuncDef = FuncDef FuncName [TypedVar] (Maybe Type) Stm
 forAsWhile :: VarName -> Range -> Stm -> Stm
 forAsWhile iter (IntRange low high) body =
     let iterVal = Var iter
-        cond    = NEq iterVal high -- Iterate until iter == (high - 1)
+        cond    = Lt iterVal high -- Iterate while iter < high
         incIter = Assign iter (DefInt (Add (Var iter) (Lit 1))) -- iter++
         body'   = Comp body incIter
         initial = Def iter (DefInt low)
