@@ -123,7 +123,7 @@ singleType :: Parser Type
 singleType = IntType <$ tok "Int"
 
 dtype :: Parser Type
-dtype = try (ArrType <$> singleType <*> square num)
+dtype = try (ArrType <$> singleType <*> square (optional num))
     <|> singleType
 
 typedVar :: Parser TypedVar

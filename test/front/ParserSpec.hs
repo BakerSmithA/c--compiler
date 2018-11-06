@@ -34,7 +34,7 @@ parserSpec = do
 
             it "args" $ do
                 let s = "def f(x: Int, y: Int[3]) {}"
-                    exp = FuncDef "f" [TypedVar "x" IntType, TypedVar "y" (ArrType IntType 3)] Nothing noOp
+                    exp = FuncDef "f" [TypedVar "x" IntType, TypedVar "y" (ArrType IntType (Just 3))] Nothing noOp
                 runParser funcDefs "" s `shouldParse` [exp]
 
             it "body with single statement" $ do

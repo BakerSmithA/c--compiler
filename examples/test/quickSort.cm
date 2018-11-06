@@ -1,0 +1,15 @@
+def main() {
+    let xs = [4, 9, 1, 20, 3]
+    print_arr(xs)
+    println()
+}
+
+def print_arr(xs: Int[5]) {
+    for let i in 0..<5 {
+        print(xs[i])
+    }
+}
+
+def quick_sort(xs: Int[]) {
+
+}

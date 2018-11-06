@@ -6,7 +6,7 @@ type FuncName = Id
 type ArrLen = Int
 
 data Type = IntType
-          | ArrType Type ArrLen
+          | ArrType Type (Maybe ArrLen)
           deriving (Eq, Show)
 
 data TypedVar = TypedVar VarName Type
@@ -46,7 +46,7 @@ data DefVal = DefInt IntVal
 
 typeOf :: DefVal -> Type
 typeOf (DefInt _)  = IntType
-typeOf (DefArr xs) = ArrType IntType (length xs)
+typeOf (DefArr xs) = ArrType IntType (Just $ length xs)
 
 data Stm = Return IntVal
          | Def VarName DefVal

@@ -1,10 +1,10 @@
 def main() {
     let xs = [5, 10, 15, 20, 25]
-    print_arr(xs)
+    print_arr(xs, 5)
 }
 
-def print_arr(xs: Int[5]) {
-    for let i in 0..<5 {
+def print_arr(xs: Int[], n: Int) {
+    for let i in 0..<n {
         print(xs[i])
     }
 }
