@@ -92,7 +92,7 @@ size (NoOp) = 0
 size (Label _) = 0
 size _ = 1
 
--- Returns instruction encoded in bytes.g
+-- Returns instruction encoded in bytes.
 encoded :: Instr -> AddrData -> [Word8]
 -- Memory
 encoded (MoveI r v)                   _ = [0, r] ++ encodeI32 v
