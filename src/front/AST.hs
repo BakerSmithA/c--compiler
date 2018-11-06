@@ -58,7 +58,6 @@ data Stm = Return IntVal
          | While BoolVal Stm
          | Call FuncCall
          | Comp [Stm]
-         | NoOp
          | Print IntVal
          | PrintLn
          deriving (Eq, Show)

@@ -15,23 +15,26 @@ var name = Var name
 result :: FuncCall -> IntVal
 result call = Result call
 
+noOp :: Stm
+noOp = Comp []
+
 parserSpec :: Spec
 parserSpec = do
     describe "parser" $ do
         context "parses functions with" $ do
             it "no args or statements" $ do
                 let s = "def f() {}"
-                    exp = FuncDef "f" [] Nothing NoOp
+                    exp = FuncDef "f" [] Nothing noOp
                 runParser funcDefs "" s `shouldParse` [exp]
 
             it "return type" $ do
                 let s = "def f() -> Int {}"
-                    exp = FuncDef "f" [] (Just IntType) NoOp
+                    exp = FuncDef "f" [] (Just IntType) noOp
                 runParser funcDefs "" s `shouldParse` [exp]
 
             it "args" $ do
                 let s = "def f(x: Int, y: Int[3]) {}"
-                    exp = FuncDef "f" [TypedVar "x" IntType, TypedVar "y" (ArrType IntType 3)] Nothing NoOp
+                    exp = FuncDef "f" [TypedVar "x" IntType, TypedVar "y" (ArrType IntType 3)] Nothing noOp
                 runParser funcDefs "" s `shouldParse` [exp]
 
             it "body with single statement" $ do
@@ -62,5 +65,5 @@ parserSpec = do
         context "parses program with" $ do
             it "multiple functions" $ do
                 let s = "def f() {} \n def main() {}"
-                    exp = [FuncDef "f" [] Nothing NoOp, FuncDef "main" [] Nothing NoOp]
+                    exp = [FuncDef "f" [] Nothing noOp, FuncDef "main" [] Nothing noOp]
                 runParser funcDefs "" s `shouldParse` exp

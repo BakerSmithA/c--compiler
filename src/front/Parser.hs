@@ -180,7 +180,9 @@ stm = try (Print <$ tok "print" <*> parens intVal)
   <|> While <$ tok "while" <*> boolVal <*> braces stms
 
 stms :: Parser Stm
-stms = stm `sepEndBy` (some (tok "\n")) >>= return . Comp
+stms = stm `sepEndBy` (some (tok "\n")) >>= return . comp where
+    comp [s] = s
+    comp ss = Comp ss
 
 funcDef :: Parser FuncDef
 funcDef = FuncDef <$ tok "def" <*> snakeId <*> parens (commaSep typedVar) <*> returnType <*> braces stms where

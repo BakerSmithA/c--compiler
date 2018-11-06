@@ -43,7 +43,6 @@ stm (AST.For name range body) = stm (AST.forAsWhile name range body)
 stm (AST.While cond body)= while cond body
 stm (AST.Call func) = call func
 stm (AST.Comp ss) = comp ss
-stm (AST.NoOp) = return []
 stm (AST.Print val) = printAsm val
 stm (AST.PrintLn) = println
 
