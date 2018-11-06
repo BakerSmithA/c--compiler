@@ -5,6 +5,7 @@ import Back.Env (St)
 import qualified Back.Env as Env
 import Back.Instr
 import Control.Monad.State
+import Data.List (sortBy)
 
 -- Takes result register and two operand registers.
 type BinOp = RegIdx -> RegIdx -> RegIdx -> Instr
@@ -13,6 +14,27 @@ prog :: [AST.FuncDef] -> St [Instr]
 prog [AST.FuncDef _ _ _ body] = do
     bodyAsm <- stm body
     return (bodyAsm ++ [SysCall])
+prog funcs = fmap concat $ mapM toAsm (mainFirst funcs) where
+    toAsm func@(AST.FuncDef name _ _ body) = do
+        end <- funcEnd func
+        bodyAsm <- stm body
+        return ([Label name] ++ bodyAsm ++ end)
+
+-- Sorts function definitions so main is at top of list. Therefore no extra
+-- code is required to branch into main.
+mainFirst :: [AST.FuncDef] -> [AST.FuncDef]
+mainFirst = sortBy order where
+    order (AST.FuncDef "main" _ _ _) _ = LT
+    order _ (AST.FuncDef "main" _ _ _) = GT
+    order _ _ = EQ
+
+-- Return instructions to place at end of function.
+-- I.e. SysCall at end of main, return at end of functions (unless they already)
+-- have a return.
+funcEnd :: AST.FuncDef -> St [Instr]
+funcEnd (AST.FuncDef "main" _ _ _) = return [SysCall]
+funcEnd (AST.FuncDef _ _ _ body) | AST.isReturn (AST.lastStm body) = return []
+                                 | otherwise = return [Ret]
 
 -- prog funcs =
 --     let (setup, env) = setupAsm Env.empty
@@ -50,7 +72,8 @@ stm (AST.PrintLn) = println
 ret :: AST.IntVal -> St [Instr]
 ret val = do
     reg <- Env.ret
-    intVal val reg
+    asm <- intVal val reg
+    return (asm ++ [Ret])
 
 -- Allocates space for new variables and stores on stack if variable does not
 -- exist. Otherwise, sets new value of existing variable.

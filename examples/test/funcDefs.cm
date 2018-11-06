@@ -1,0 +1,11 @@
+def f() -> Int {
+    return 1
+}
+
+def main() {
+    print(1)
+}
+
+def g() {
+    print(2)
+}

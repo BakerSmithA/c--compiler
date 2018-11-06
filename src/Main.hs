@@ -11,6 +11,7 @@ import System.Environment
 
 newlines :: Instr -> String
 newlines (Instr.Ret) = "\n"
+newlines (Instr.SysCall) = "\n"
 newlines _           = ""
 
 showInstrs :: [Instr] -> String

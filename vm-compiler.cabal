@@ -17,7 +17,11 @@ cabal-version:       >=1.10
 
 executable c--
   main-is:             Main.hs
-  -- other-modules:
+  other-modules:       Back.ASM
+                     , Back.Env
+                     , Back.Instr
+                     , Front.AST
+                     , Front.Parser
   -- other-extensions:
   build-depends:       base >=4.10 && <4.11
                      , megaparsec
@@ -40,6 +44,12 @@ test-suite spec
                      , bytestring
                      , containers
                      , mtl
-  -- other-modules:
+  other-modules:     Back.ASM
+                   , Back.ASMSpec
+                   , Back.Env
+                   , Back.Instr
+                   , Front.AST
+                   , Front.Parser
+                   , Front.ParserSpec
   hs-source-dirs:      src, test
   default-language:    Haskell2010

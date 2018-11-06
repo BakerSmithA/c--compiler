@@ -75,3 +75,11 @@ forAsWhile iter (IntRange low high) body =
         initial = Def iter (DefInt low)
         loop    = While cond body'
     in Comp [initial, loop]
+
+lastStm :: Stm -> Stm
+lastStm (Comp ss) = last ss
+lastStm stm = stm
+
+isReturn :: Stm -> Bool
+isReturn (Return _) = True
+isReturn _ = False
