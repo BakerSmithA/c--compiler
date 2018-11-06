@@ -323,11 +323,3 @@ block st = state $ \sOld ->
     in if bpNew - bpOld == 0
         then (is, sRestored)
         else (is ++ [decSp], sRestored) -- Only dec sp if it was modified
-
-    -- let (is, sNew) = runState st sOld
-    --     sRestored  = Env.restoreEnv sOld sNew
-    --     bpOld      = Env.bpOffset sOld
-    --     bpNew      = Env.bpOffset sNew
-    --     sp         = Env.spIdx sNew
-    --     decSp      = SubI sp sp (bpNew - bpOld)
-    -- in (is ++ [decSp], sRestored)
