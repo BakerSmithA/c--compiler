@@ -57,7 +57,7 @@ data Stm = Return IntVal
          | For VarName Range Stm
          | While BoolVal Stm
          | Call FuncCall
-         | Comp Stm Stm
+         | Comp [Stm]
          | NoOp
          | Print IntVal
          | PrintLn
@@ -72,7 +72,7 @@ forAsWhile iter (IntRange low high) body =
     let iterVal = Var iter
         cond    = Lt iterVal high -- Iterate while iter < high
         incIter = Assign iter (DefInt (Add (Var iter) (Lit 1))) -- iter++
-        body'   = Comp body incIter
+        body'   = Comp [body, incIter]
         initial = Def iter (DefInt low)
         loop    = While cond body'
-    in Comp initial loop
+    in Comp [initial, loop]

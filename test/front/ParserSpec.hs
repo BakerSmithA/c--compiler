@@ -41,7 +41,7 @@ parserSpec = do
 
             it "body with multiple statements" $ do
                 let s = "def f() { let x = 1 \n return x }"
-                    exp = FuncDef "f" [] Nothing (Comp (Def "x" (DefInt (lit 1))) (Return (var "x")))
+                    exp = FuncDef "f" [] Nothing (Comp [Def "x" (DefInt (lit 1)), Return (var "x")])
                 runParser funcDefs "" s `shouldParse` [exp]
 
             it "body with call assignment" $ do

@@ -139,7 +139,7 @@ intVal' = try (ArrAccess <$> snakeId <*> square intVal)
      <|> Lit <$> num
 
 intOps :: [[Operator Parser IntVal]]
-intOps = [[InfixL (Mult <$ tok "*")], 
+intOps = [[InfixL (Mult <$ tok "*")],
           [InfixL (Add <$ tok "+"), InfixL (Sub <$ tok "-")]]
 
 intVal :: Parser IntVal
@@ -180,10 +180,7 @@ stm = try (Print <$ tok "print" <*> parens intVal)
   <|> While <$ tok "while" <*> boolVal <*> braces stms
 
 stms :: Parser Stm
-stms = stm `sepEndBy` (some (tok "\n")) >>= return . compose where
-    compose []     = NoOp
-    compose [s]    = s
-    compose (s:ss) = Comp s (compose ss)
+stms = stm `sepEndBy` (some (tok "\n")) >>= return . Comp
 
 funcDef :: Parser FuncDef
 funcDef = FuncDef <$ tok "def" <*> snakeId <*> parens (commaSep typedVar) <*> returnType <*> braces stms where

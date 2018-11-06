@@ -42,7 +42,7 @@ stm (AST.IfElse cond sThen sElse) = ifElse cond sThen sElse
 stm (AST.For name range body) = stm (AST.forAsWhile name range body)
 stm (AST.While cond body)= while cond body
 stm (AST.Call func) = call func
-stm (AST.Comp s1 s2) = comp s1 s2
+stm (AST.Comp ss) = comp ss
 stm (AST.NoOp) = return []
 stm (AST.Print val) = printAsm val
 stm (AST.PrintLn) = println
@@ -149,11 +149,12 @@ call :: AST.FuncCall -> St [Instr]
 call = error "call not implemented"
 
 -- Return ASM for performing one statement after another.
-comp :: AST.Stm -> AST.Stm -> St [Instr]
-comp s1 s2 = do
-    s1Asm <- stm s1
-    s2Asm <- stm s2
-    return (s1Asm ++ s2Asm)
+comp :: [AST.Stm] -> St [Instr]
+comp [] = return []
+comp (s:rest) = do
+    sAsm <- stm s
+    restAsm <- comp rest
+    return (sAsm ++ restAsm)
 
 -- Return ASM for printing an int value.
 printAsm :: AST.IntVal -> St [Instr]
