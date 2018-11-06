@@ -1,0 +1,25 @@
+def main() {
+    let xs = [4, 9, 1, 20, 3]
+    print_arr(xs)
+    println()
+    sort(xs)
+    print_arr(xs)
+}
+
+def sort(xs: Int[5]) {
+    for let i in 0..<4 {
+        for let j in 0..<4 {
+            if xs[j] > xs[j+1] {
+                let tmp = xs[j]
+                xs[j] = xs[j+1]
+                xs[j+1] = tmp
+            }
+        }
+    }
+}
+
+def print_arr(xs: Int[5]) {
+    for let i in 0..<5 {
+        print(xs[i])
+    }
+}

@@ -1,13 +1,10 @@
 def main() {
-    let xs = [1, 2, 3]
-    f(xs)
+    let xs = [5, 10, 15, 20, 25]
+    print_arr(xs)
 }
 
-def f(xs: Int[3]) {
-    let i = 100
-    print(i)
-    println()
-    for let i in 0..<3 {
+def print_arr(xs: Int[5]) {
+    for let i in 0..<5 {
         print(xs[i])
     }
 }
