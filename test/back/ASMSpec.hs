@@ -10,6 +10,9 @@ import Back.Instr
 sp :: RegIdx
 sp = 14
 
+lr :: RegIdx
+lr = 15
+
 bp :: RegIdx
 bp = 16
 
@@ -312,5 +315,38 @@ callSpec = describe "call" $ do
     it "generates asm" $ do
         let ast = AST.Call (AST.FuncCall "func" [AST.Lit 3, AST.Var "x", AST.Lit 7])
             env = Env.fromVars [("x", 0)]
-            exp = []
+                -- Compute values of arguments
+            exp = [MoveI {r = 0, val = 3}
+                , LoadIdx {r = 1, base = bp, offset = 0}
+                , MoveI {r = 2, val = 7}
+
+                -- Save BP and LR
+                , StoreIdx {r = bp, base = sp, offset = 0}
+                , StoreIdx {r = lr, base = sp, offset = 1}
+                , AddI {r = sp, x = sp, i = 2}
+
+                -- Update BP to be top of stack, creating new frame.
+                , Move {r = bp, from = sp}
+                -- Save LR to contain address of label '0'
+                , MoveLabel lr (LabelAddr "0")
+
+                -- Push arguments onto stack.
+                , StoreIdx {r = 0, base = sp, offset = 0}
+                , StoreIdx {r = 1, base = sp, offset = 1}
+                , StoreIdx {r = 2, base = sp, offset = 2}
+                , AddI {r = sp, x = sp, i = 3}
+
+                -- Perform call
+                , B {label = "func"}
+
+                -- Branch back address
+                , Label "0"
+
+                -- Pop arguments from stack.
+                , SubI {r = sp, x = sp, i = 3}
+
+                -- Restore BP and LR.
+                , LoadIdx {r = lr, base = sp, offset = -1}
+                , LoadIdx {r = bp, base = sp, offset = -2}
+                , SubI {r = sp, x = sp, i = 2}]
         runSt env (stm ast) `shouldBe` exp
