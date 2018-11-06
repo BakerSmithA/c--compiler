@@ -151,8 +151,23 @@ while cond body = Env.tempReg $ \condReg -> do
 -- Return ASM for performing function call.
 call :: AST.FuncCall -> St [Instr]
 call (AST.FuncCall name args) = Env.tempRegs args $ \valsAndRegs -> do
+    bp <- Env.bp
+    sp <- Env.sp
+    lr <- Env.lr
+    retLabel <- Env.freshLabel
+
+    let argRegs = map snd valsAndRegs
+
     compArgsAsm <- intValAll valsAndRegs
-    return compArgsAsm
+    pushBp <- push [bp, lr]
+    let setBp = [Move bp sp]
+    let saveReturn = [MoveLabel lr (LabelAddr retLabel)]
+    pushArgs <- push argRegs
+    let branch = [B name, Label retLabel]
+    let popArgs = [SubI sp sp (fromIntegral $ length args)]
+    restore <- pop [lr, bp]
+
+    return (compArgsAsm ++ pushBp ++ setBp ++ saveReturn ++ pushArgs ++ branch ++ popArgs ++ restore)
 
 -- Return ASM for performing one statement after another.
 comp :: [AST.Stm] -> St [Instr]

@@ -1,0 +1,14 @@
+def main() {
+    print(1)
+    f()
+    print(4)
+}
+
+def f() {
+    print(2)
+    h()
+}
+
+def h() {
+    print(3)
+}
