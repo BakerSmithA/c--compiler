@@ -124,6 +124,15 @@ tempReg f = do
     freeReg reg
     return res
 
+-- Takes enough registers to give to each elements of xs. All registers are
+-- given back after f finishes.
+tempRegs :: [a] -> ([(a, RegIdx)] -> St b) -> St b
+tempRegs xs f = do
+    valsAndRegs <- mapM (\x -> fmap (\reg -> (x, reg)) takeReg) xs
+    res <- f valsAndRegs
+    mapM freeReg (fmap snd valsAndRegs)
+    return res
+
 -- Increment offset past base pointer. Used to keep track of where variables are
 -- stored on the stack.
 incBpOffset :: Val -> St ()

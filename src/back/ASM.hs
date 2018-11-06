@@ -150,8 +150,9 @@ while cond body = Env.tempReg $ \condReg -> do
 
 -- Return ASM for performing function call.
 call :: AST.FuncCall -> St [Instr]
-call (AST.FuncCall name args) = undefined
-
+call (AST.FuncCall name args) = Env.tempRegs args $ \valsAndRegs -> do
+    compArgsAsm <- intValAll valsAndRegs
+    return compArgsAsm
 
 -- Return ASM for performing one statement after another.
 comp :: [AST.Stm] -> St [Instr]

@@ -31,6 +31,7 @@ asmSpec = describe "asm generation" $ do
     ifElseSpec
     whileSpec
     forSpec
+    callSpec
 
 pushSpec :: Spec
 pushSpec = describe "push" $ do
@@ -305,3 +306,11 @@ forSpec = describe "for" $ do
                    -- Exit
                    , Label "1"]
         runSt empty (stm ast) `shouldBe` exp
+
+callSpec :: Spec
+callSpec = describe "call" $ do
+    it "generates asm" $ do
+        let ast = AST.Call (AST.FuncCall "func" [AST.Lit 3, AST.Var "x", AST.Lit 7])
+            env = Env.fromVars [("x", 0)]
+            exp = []
+        runSt env (stm ast) `shouldBe` exp
