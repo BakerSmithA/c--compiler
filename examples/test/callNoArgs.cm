@@ -2,7 +2,8 @@ def main() {
     let x = 1
     print(x)
     f()
-    print(4)
+    let z = 4
+    print(z)
 }
 
 def f() {
