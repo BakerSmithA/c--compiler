@@ -22,6 +22,7 @@ asmSpec = describe "asm generation" $ do
     pushSpec
     popSpec
     intValSpec
+    intValAllSpec
     boolValSpec
     defSpec
     assignSpec
@@ -81,6 +82,19 @@ intValSpec = describe "int val" $ do
                  , MoveI 1 3
                  , Sub 0 0 1]
         runSt env (intVal ast 0) `shouldBe` exp
+
+intValAllSpec :: Spec
+intValAllSpec = describe "intValAllSpec" $ do
+    it "generates asm for each val" $ do
+        let val0 = AST.Lit 2
+            val1 = AST.Lit 3
+            val2 = AST.Var "x"
+            env = Env.fromVars [("x", 7)]
+            exp = [MoveI 5 2
+                 , MoveI 3 3
+                 , LoadIdx { r=1, base=bp, offset=7 }]
+            vals = [(val0, 5), (val1, 3), (val2, 1)]
+        runSt env (intValAll vals) `shouldBe` exp
 
 boolValSpec :: Spec
 boolValSpec = describe "bool value" $ do
