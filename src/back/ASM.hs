@@ -150,7 +150,8 @@ while cond body = Env.tempReg $ \condReg -> do
 
 -- Return ASM for performing function call.
 call :: AST.FuncCall -> St [Instr]
-call = error "call not implemented"
+call (AST.FuncCall name args) = undefined
+
 
 -- Return ASM for performing one statement after another.
 comp :: [AST.Stm] -> St [Instr]
@@ -193,6 +194,13 @@ intVal (AST.ArrAccess name idx) = arrAccess name idx
 intVal (AST.Add val1 val2)      = op Add intVal val1 val2
 intVal (AST.Sub val1 val2)      = op Sub intVal val1 val2
 intVal (AST.Mult val1 val2)     = op Mult intVal val1 val2
+
+-- Return instructions to store all int values in supplied registers.
+intValAll :: [(AST.IntVal, RegIdx)] -> St [Instr]
+intValAll = foldM moveVal [] where
+    moveVal instrs (val, reg) = do
+        asm <- intVal val reg
+        return (instrs ++ asm)
 
 -- Return instructions to store bool value in supplied register.
 boolVal :: AST.BoolVal -> RegIdx -> St [Instr]
