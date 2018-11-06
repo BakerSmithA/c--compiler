@@ -355,6 +355,7 @@ popNum n = do
     Env.incBpOffset (-n)
     return [SubI sp sp n]
 
+-- Places arguments at start of frame, i.e. at bpOffset 0, 1, 2, etc
 argsAtFrameStart :: [AST.VarName] -> St [Instr] -> St [Instr]
 argsAtFrameStart argNames st = state $ \sOld ->
     let (is, sNew) = runState st (Env.putArgs argNames sOld)

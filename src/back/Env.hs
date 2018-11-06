@@ -58,8 +58,10 @@ setBpOffset :: Val -> Env -> Env
 setBpOffset offset env = env { bpOffset = offset }
 
 -- Adds arguments to 0.. bpOffset, i.e. at top of call frame.
+-- Also increments bpOffset.
 putArgs :: [VarName] -> Env -> Env
-putArgs names env = env { varBpOffset = varBpOffset' } where
+putArgs names env = env { varBpOffset = varBpOffset', bpOffset = bpOffset' } where
+    bpOffset'    = (bpOffset env) + (fromIntegral $ length names)
     varBpOffset' = foldr ins (varBpOffset env) (zip names [0..])
     ins (name, reg) = Map.insert name reg
 
