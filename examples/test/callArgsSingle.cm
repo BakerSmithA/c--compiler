@@ -1,9 +1,14 @@
 def main() {
-    f(1, 2, 3)
+    let x = 1
+    f(x, 2, 3)
+    let z = 5
+    print(z)
 }
 
 def f(x: Int, y: Int, z: Int) {
     print(x)
     print(y)
+    print(z)
+    let z = 4
     print(z)
 }

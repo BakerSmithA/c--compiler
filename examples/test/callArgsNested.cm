@@ -1,13 +1,18 @@
 def main() {
-    f(1, 2, 3)
+    let x = 1
+    f(x, 2, 5)
 }
 
 def f(x: Int, y: Int, z: Int) {
     h(x, y)
     print(z)
+    let a = 3
+    print(a)
 }
 
 def h(x: Int, y: Int) {
     print(x)
     print(y)
+    let a = 4
+    print(a)
 }
