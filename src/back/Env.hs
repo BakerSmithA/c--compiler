@@ -93,6 +93,13 @@ putVar :: VarName -> Val -> St ()
 putVar name offset = modify $ \env ->
     env { varBpOffset = Map.insert name offset (varBpOffset env) }
 
+-- Adds arguments to the environment, with addresses incrementing using bpOffset.
+putArgs :: [VarName] -> St ()
+putArgs args = modify $ \env ->
+    let varBpOffset' = foldr (\(arg, offset) -> Map.insert arg offset) (varBpOffset env) (zip args [(bpOffset env)..])
+        bpOffset'    = (bpOffset env) + (fromIntegral $ length args)
+    in env { varBpOffset = varBpOffset', bpOffset = bpOffset' } where
+
 -- Returns a fresh label to use as a branch location.
 freshLabel :: St String
 freshLabel = do

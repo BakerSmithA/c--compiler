@@ -15,9 +15,10 @@ prog [AST.FuncDef _ _ _ body] = do
     bodyAsm <- stm body
     return (bodyAsm ++ [SysCall])
 prog funcs = fmap concat $ mapM toAsm (mainFirst funcs) where
-    toAsm func@(AST.FuncDef name _ _ body) = do
+    toAsm func@(AST.FuncDef name args _ body) = do
+        let argNames = map AST.varName args
         end <- funcEnd func
-        bodyAsm <- zeroedBp (block (stm body)) -- Zero compiler-BP access to variables is correct.
+        bodyAsm <- Env.putArgs argNames (zeroedBp (block (stm body))) -- Zero compiler-BP access to variables is correct.
         return ([Label name] ++ bodyAsm ++ end)
 
 -- Sorts function definitions so main is at top of list. Therefore no extra
@@ -156,27 +157,25 @@ call (AST.FuncCall name args) = Env.tempRegs args $ \valsAndRegs -> do
     lr <- Env.lr
     retLabel <- Env.freshLabel
 
+    let argRegs = map snd valsAndRegs
+
+    compArgsAsm <- intValAll valsAndRegs
     saveRegs <- push [bp, lr]
     let setRegs = [Move bp sp, MoveLabel lr (LabelAddr retLabel)]
+    pushArgs <- push argRegs
     let branch = [B name, Label retLabel]
+    let popArgs = if length args == 0
+                    then []
+                    else [SubI sp sp (fromIntegral $ length args)]
     restoreRegs <- pop [lr, bp]
 
-    return (saveRegs ++ setRegs ++ branch ++ restoreRegs)
-
-    -- let argRegs = map snd valsAndRegs
-    --
-    -- compArgsAsm <- intValAll valsAndRegs
-    -- pushBp <- push [bp, lr]
-    -- let setBp = [Move bp sp]
-    -- let saveReturn = [MoveLabel lr (LabelAddr retLabel)]
-    -- pushArgs <- push argRegs
-    -- let branch = [B name, Label retLabel]
-    -- let popArgs = if length args == 0
-    --                 then []
-    --                 else [SubI sp sp (fromIntegral $ length args)]
-    -- restore <- pop [lr, bp]
-    --
-    -- return (compArgsAsm ++ pushBp ++ setBp ++ saveReturn ++ pushArgs ++ branch ++ popArgs ++ restore)
+    return (compArgsAsm
+         ++ saveRegs
+         ++ setRegs
+         ++ pushArgs
+         ++ branch
+         ++ popArgs
+         ++ restoreRegs)
 
 -- Return ASM for performing one statement after another.
 comp :: [AST.Stm] -> St [Instr]

@@ -1,0 +1,9 @@
+def main() {
+    f(1, 2, 3)
+}
+
+def f(x: Int, y: Int, z: Int) {
+    print(x)
+    print(y)
+    print(z)
+}
