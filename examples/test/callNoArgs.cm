@@ -2,7 +2,7 @@ def main() {
     let x = 1
     print(x)
     f()
-    let z = 4
+    let z = 6
     print(z)
 }
 
@@ -13,5 +13,8 @@ def f() {
 }
 
 def h() {
-    print(3)
+    let xs = [3, 4, 5]
+    for let i in 0..<3 {
+        print(xs[i])
+    }
 }

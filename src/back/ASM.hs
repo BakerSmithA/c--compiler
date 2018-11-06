@@ -17,7 +17,7 @@ prog [AST.FuncDef _ _ _ body] = do
 prog funcs = fmap concat $ mapM toAsm (mainFirst funcs) where
     toAsm func@(AST.FuncDef name _ _ body) = do
         end <- funcEnd func
-        bodyAsm <- zeroedBp (stm body) -- Zero compiler-BP access to variables is correct.
+        bodyAsm <- zeroedBp (block (stm body)) -- Zero compiler-BP access to variables is correct.
         return ([Label name] ++ bodyAsm ++ end)
 
 -- Sorts function definitions so main is at top of list. Therefore no extra
@@ -156,18 +156,27 @@ call (AST.FuncCall name args) = Env.tempRegs args $ \valsAndRegs -> do
     lr <- Env.lr
     retLabel <- Env.freshLabel
 
-    let argRegs = map snd valsAndRegs
-
-    compArgsAsm <- intValAll valsAndRegs
-    pushBp <- push [bp, lr]
-    let setBp = [Move bp sp]
-    let saveReturn = [MoveLabel lr (LabelAddr retLabel)]
-    pushArgs <- push argRegs
+    saveRegs <- push [bp, lr]
+    let setRegs = [Move bp sp, MoveLabel lr (LabelAddr retLabel)]
     let branch = [B name, Label retLabel]
-    let popArgs = [SubI sp sp (fromIntegral $ length args)]
-    restore <- pop [lr, bp]
+    restoreRegs <- pop [lr, bp]
 
-    return (compArgsAsm ++ pushBp ++ setBp ++ saveReturn ++ pushArgs ++ branch ++ popArgs ++ restore)
+    return (saveRegs ++ setRegs ++ branch ++ restoreRegs)
+
+    -- let argRegs = map snd valsAndRegs
+    --
+    -- compArgsAsm <- intValAll valsAndRegs
+    -- pushBp <- push [bp, lr]
+    -- let setBp = [Move bp sp]
+    -- let saveReturn = [MoveLabel lr (LabelAddr retLabel)]
+    -- pushArgs <- push argRegs
+    -- let branch = [B name, Label retLabel]
+    -- let popArgs = if length args == 0
+    --                 then []
+    --                 else [SubI sp sp (fromIntegral $ length args)]
+    -- restore <- pop [lr, bp]
+    --
+    -- return (compArgsAsm ++ pushBp ++ setBp ++ saveReturn ++ pushArgs ++ branch ++ popArgs ++ restore)
 
 -- Return ASM for performing one statement after another.
 comp :: [AST.Stm] -> St [Instr]
@@ -290,6 +299,7 @@ notEq v1 v2 reg = do
 --      |         | <- SP
 --      -----------
 push :: [RegIdx] -> St [Instr]
+push [] = return []
 push regs = do
     sp <- Env.sp
     let store (idx, offset) = StoreIdx idx sp offset
@@ -331,6 +341,7 @@ seqPush vals = Env.tempReg $ \reg -> seqPush' vals reg where
 --       |    2    |
 --       -----------
 pop :: [RegIdx] -> St [Instr]
+pop [] = return []
 pop regs = do
     sp <- Env.sp
     let load (idx, offset) = LoadIdx idx sp (-offset)
