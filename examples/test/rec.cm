@@ -1,0 +1,11 @@
+def main() {
+    let r = rec_sum(6)
+    print(r)
+}
+
+def rec_sum(x: Int) -> Int {
+    if x == 0 {
+        return 0
+    }
+    return rec_sum(x - 1) + x
+}

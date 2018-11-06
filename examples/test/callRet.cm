@@ -1,0 +1,8 @@
+def main() {
+    let x = f()
+    print(x)
+}
+
+def f() -> Int {
+    return 10 + 1
+}
