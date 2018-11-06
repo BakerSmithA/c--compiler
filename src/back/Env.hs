@@ -57,6 +57,12 @@ restoreEnv old new = new {
 setBpOffset :: Val -> Env -> Env
 setBpOffset offset env = env { bpOffset = offset }
 
+-- Adds arguments to 0.. bpOffset, i.e. at top of call frame.
+putArgs :: [VarName] -> Env -> Env
+putArgs names env = env { varBpOffset = varBpOffset' } where
+    varBpOffset' = foldr ins (varBpOffset env) (zip names [0..])
+    ins (name, reg) = Map.insert name reg
+
 -- Return index of stack pointer register.
 sp :: St RegIdx
 sp = fmap spIdx get
@@ -92,13 +98,6 @@ getVarOffset name = do
 putVar :: VarName -> Val -> St ()
 putVar name offset = modify $ \env ->
     env { varBpOffset = Map.insert name offset (varBpOffset env) }
-
--- Adds arguments to the environment, with addresses incrementing using bpOffset.
-putArgs :: [VarName] -> St ()
-putArgs args = modify $ \env ->
-    let varBpOffset' = foldr (\(arg, offset) -> Map.insert arg offset) (varBpOffset env) (zip args [(bpOffset env)..])
-        bpOffset'    = (bpOffset env) + (fromIntegral $ length args)
-    in env { varBpOffset = varBpOffset', bpOffset = bpOffset' } where
 
 -- Returns a fresh label to use as a branch location.
 freshLabel :: St String

@@ -1,0 +1,13 @@
+def main() {
+    f(1, 2, 3)
+}
+
+def f(x: Int, y: Int, z: Int) {
+    h(x, y)
+    print(z)
+}
+
+def h(x: Int, y: Int) {
+    print(x)
+    print(y)
+}
