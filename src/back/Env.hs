@@ -53,6 +53,10 @@ restoreEnv old new = new {
   , bpOffset = (bpOffset old)
 }
 
+-- Sets the BpOffset to 0.
+setBpOffset :: Val -> Env -> Env
+setBpOffset offset env = env { bpOffset = offset }
+
 -- Return index of stack pointer register.
 sp :: St RegIdx
 sp = fmap spIdx get

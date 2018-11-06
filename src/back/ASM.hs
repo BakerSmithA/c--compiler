@@ -17,7 +17,7 @@ prog [AST.FuncDef _ _ _ body] = do
 prog funcs = fmap concat $ mapM toAsm (mainFirst funcs) where
     toAsm func@(AST.FuncDef name _ _ body) = do
         end <- funcEnd func
-        bodyAsm <- stm body
+        bodyAsm <- zeroedBp (stm body) -- Zero compiler-BP access to variables is correct.
         return ([Label name] ++ bodyAsm ++ end)
 
 -- Sorts function definitions so main is at top of list. Therefore no extra
@@ -338,6 +338,13 @@ pop regs = do
         decSp = SubI sp sp (fromIntegral $ length regs)
     Env.incBpOffset (-(fromIntegral $ length regs))
     return (loads ++ [decSp])
+
+-- Compute ASM with zeroed Bp, then return Bp to value before call.
+zeroedBp :: St [Instr] -> St [Instr]
+zeroedBp st = state $ \sOld ->
+    let savedBpOffset = Env.bpOffset sOld
+        (is, sNew) = runState st (Env.setBpOffset 0 sOld)
+    in (is, Env.setBpOffset savedBpOffset sNew)
 
 -- Restores free registers, mapping from variables to addresses, and bpOffset
 -- after block.

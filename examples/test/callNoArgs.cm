@@ -1,11 +1,13 @@
 def main() {
-    print(1)
+    let x = 1
+    print(x)
     f()
     print(4)
 }
 
 def f() {
-    print(2)
+    let y = 2
+    print(y)
     h()
 }
 
