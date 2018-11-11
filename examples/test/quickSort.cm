@@ -1,13 +1,17 @@
 def main() {
-    let xs = [10, 80, 30, 90, 40, 50, 70]
-    let p = partition(xs, 0, 6)
-    print_arr(xs, 7)
+    let arr = [10, 80, 30, 90, 40, 50, 70]
+    quick_sort(arr, 0, 6)
 }
 
-def print_arr(xs: Int[], n: Int) {
+def print_arr(arr: Int[], n: Int) {
     for let i in 0..<n {
-        print(xs[i])
+        print(arr[i])
     }
+}
+
+def quick_sort(arr: Int[], low: Int, high: Int) {
+    let p = partition(arr, low, high)
+    print(p)
 }
 
 def partition(arr: Int[], low: Int, high: Int) -> Int {
@@ -16,15 +20,13 @@ def partition(arr: Int[], low: Int, high: Int) -> Int {
     for let j in low..<high {
         if arr[j] < pivot or arr[j] == pivot {
             i = i + 1
-            swap(arr, i, j)
+            let tmp = arr[j]
+            arr[j] = arr[i]
+            arr[i] = tmp
         }
     }
-    swap(arr, i + 1, high)
+    let tmp = arr[i+1]
+    arr[i+1] = arr[high]
+    arr[high] = tmp
     return i + 1
-}
-
-def swap(xs: Int[], i: Int, j: Int) {
-    let tmp = xs[j]
-    xs[j] = xs[i]
-    xs[i] = tmp
 }
