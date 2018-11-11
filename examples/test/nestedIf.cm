@@ -1,0 +1,13 @@
+def main() {
+    if True {
+        print(1)
+        if True {
+            print(2)
+            if True {
+                print(3)
+            } else {
+                print(1000)
+            }
+        }
+    }
+}
