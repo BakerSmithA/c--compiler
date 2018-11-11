@@ -1,0 +1,13 @@
+def main() {
+    let grid = [0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0]
+    print_grid(grid, 4, 4)
+}
+
+def print_grid(grid: Int[], w: Int, h: Int) {
+    for let y in 0..<h {
+        for let x in 0..<w {
+            print(grid[y * w + x])
+        }
+        println()
+    }
+}
