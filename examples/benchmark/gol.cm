@@ -12,7 +12,7 @@ def num_neighbours(grid: Int[], x: Int, y: Int, w: Int, h: Int) {
             total = total + grid[y2 * w + x2]
         }
     }
-    return total
+    return total - grid[y * w + x]
 }
 
 def wrap(x: Int, n: Int) -> Int {
