@@ -1,6 +1,7 @@
 def main() {
     let grid = [0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0]
-    print(num_neighbours(grid, 1, 1, 4, 4))
+    let f = num_neighbours(grid, 2, 2, 4, 4)
+    print(f)
 }
 
 def num_neighbours(grid: Int[], x: Int, y: Int, w: Int, h: Int) {
