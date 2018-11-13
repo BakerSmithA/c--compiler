@@ -1,10 +1,18 @@
 def main() {
     let grid = [0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0]
-    print_grid(grid, 4, 4)
+    print(num_neighbours(grid, 1, 1, 4, 4))
 }
 
 def num_neighbours(grid: Int[], x: Int, y: Int, w: Int, h: Int) {
-    return 0
+    let total = 0
+    for let i in 0-1..<2 {
+        for let j in 0-1..<2 {
+            let x2 = wrap(x + i, w)
+            let y2 = wrap(y + j, w)
+            total = total + grid[y2 * w + x2]
+        }
+    }
+    return total
 }
 
 def wrap(x: Int, n: Int) -> Int {
