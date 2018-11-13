@@ -3,6 +3,20 @@ def main() {
     print_grid(grid, 4, 4)
 }
 
+def num_neighbours(grid: Int[], x: Int, y: Int, w: Int, h: Int) {
+    return 0
+}
+
+def wrap(x: Int, n: Int) -> Int {
+    if x < 0 {
+        return n - 1
+    }
+    if x == n {
+        return 0
+    }
+    return x
+}
+
 def print_grid(grid: Int[], w: Int, h: Int) {
     for let y in 0..<h {
         for let x in 0..<w {
