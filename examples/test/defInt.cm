@@ -1,4 +1,6 @@
 def main() {
     let x = 5
+    let y = 2
     print(x)
+    print(y)
 }
