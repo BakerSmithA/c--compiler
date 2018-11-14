@@ -5,7 +5,6 @@ import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Set (Set)
 import qualified Data.Set as Set
-import Data.Maybe (fromJust)
 import Front.AST
 import Back.Instr
 
@@ -26,9 +25,6 @@ data Env = Env {
     -- Offset of where variables/arguments are stored on the stack, relative to
     -- base pointer (bp).
   , varBpOffset :: Map VarName Val
-    -- Current offset past base pointer. Works like stack pointer, but during
-    -- compile time used to keep track of where variables are located on stack.
-  , bpOffset :: Val
     -- Used to generate fresh labels for branch locations.
   , currLabel :: Int
 }
@@ -38,7 +34,7 @@ type St a = State Env a
 
 -- Environment with no variables, arguments, or used labels.
 empty :: Env
-empty = Env 13 14 15 16 (Set.fromList [0..12]) Map.empty 0 0
+empty = Env 13 14 15 16 (Set.fromList [0..12]) Map.empty 0
 
 -- Environment containing variables at given offset past bp.
 fromVars :: [(VarName, Val)] -> Env
@@ -50,18 +46,11 @@ restoreEnv :: Env -> Env -> Env
 restoreEnv old new = new {
     freeRegs = (freeRegs old)
   , varBpOffset = (varBpOffset old)
-  , bpOffset = (bpOffset old)
 }
 
--- Sets the BpOffset to 0.
-setBpOffset :: Val -> Env -> Env
-setBpOffset offset env = env { bpOffset = offset }
-
--- Adds arguments to 0.. bpOffset, i.e. at top of call frame.
--- Also increments bpOffset.
-putArgs :: [VarName] -> Env -> Env
-putArgs names env = env { varBpOffset = varBpOffset', bpOffset = bpOffset' } where
-    bpOffset'    = (bpOffset env) + (fromIntegral $ length names)
+-- Adds arguments to bp + 0, 1, 2, etc, i.e. at top of call frame.
+putVarsAtStart :: [VarName] -> Env -> Env
+putVarsAtStart names env = env { varBpOffset = varBpOffset' } where
     varBpOffset' = foldr ins (varBpOffset env) (zip names [0..])
     ins (name, reg) = Map.insert name reg
 
@@ -81,19 +70,14 @@ bp = fmap bpIdx get
 ret :: St RegIdx
 ret = fmap retIdx get
 
--- Returns whether a variable exists in the environment.
-varExists :: VarName -> St Bool
-varExists name = do
-    env <- get
-    return (Map.member name (varBpOffset env))
-
 -- Returns address associated with variable, or crashes if address not associated
 -- with variable.
 getVarOffset :: VarName -> St Val
 getVarOffset name = do
     env <- get
-    let addr = Map.lookup name (varBpOffset env)
-    return (fromJust addr)
+    case Map.lookup name (varBpOffset env) of
+        Nothing -> error ("No variable with name: " ++ name)
+        Just val -> return val
 
 -- Keeps track of a variable and associated stack address. Stack address is
 -- calculated as an offset past the base pointer, the offset is returned.
@@ -144,12 +128,6 @@ tempRegs xs f = do
     res <- f valsAndRegs
     mapM freeReg (fmap snd valsAndRegs)
     return res
-
--- Increment offset past base pointer. Used to keep track of where variables are
--- stored on the stack.
-incBpOffset :: Val -> St ()
-incBpOffset delta = modify $ \env ->
-    env { bpOffset = (bpOffset env) + delta }
 
 runSt :: Env -> St a -> a
 runSt env st = fst (runState st env)

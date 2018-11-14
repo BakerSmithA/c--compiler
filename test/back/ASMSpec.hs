@@ -28,7 +28,6 @@ asmSpec = describe "asm generation" $ do
     intValAllSpec
     boolValSpec
     defSpec
-    assignSpec
     assignArrElemSpec
     ifSpec
     ifElseSpec
@@ -167,57 +166,29 @@ defSpec :: Spec
 defSpec = describe "def" $ do
     it "generates asm for def int" $ do
         let ast = AST.Def "x" (AST.DefInt (AST.Lit 2))
+            env = Env.fromVars [("x", 0)]
             exp = [MoveI 0 2
-                 , StoreIdx { r=0, base=sp, offset=0 }
-                 , AddI sp sp 1]
-        runSt empty (stm ast) `shouldBe` exp
-
-    it "overwrites existing var if already exists" $ do
-        let def n x = AST.Def n (AST.DefInt (AST.Lit x))
-            ast = AST.Comp [def "x" 2, def "x" 3]
-            exp = [MoveI 0 2
-                 , StoreIdx { r=0, base=sp, offset=0 }
-                 , AddI sp sp 1
-                 -- Declare same variable again should not cause a new variable
-                 -- to be pushed to stack.
-                 , MoveI 0 3
                  , StoreIdx { r=0, base=bp, offset=0 }]
-        runSt empty (stm ast) `shouldBe` exp
+        runSt env (stm ast) `shouldBe` exp
 
     it "generates asm for def arr" $ do
         let elems = [AST.Lit 1, AST.Lit 2]
             ast   = (AST.Def "x" (AST.DefArr elems))
-            exp   = [Move 0 sp -- Save start address.
+            env   = Env.fromVars [("x", 0)]
+            exp   = []
 
-                   , MoveI 1 1 -- Push elements of array.
-                   , StoreIdx { r=1, base=sp, offset=0 }
-                   , AddI sp sp 1
-                   , MoveI 1 2
-                   , StoreIdx { r=1, base=sp, offset=0 }
-                   , AddI sp sp 1
+            -- exp   = [Move 0 sp -- Save start address.
+            --
+            --        , MoveI 1 1 -- Push elements of array.
+            --        , StoreIdx { r=1, base=bp, offset=0 }
+            --        , AddI sp sp 1
+            --        , MoveI 1 2
+            --        , StoreIdx { r=1, base=bp, offset=0 }
+            --        , AddI sp sp 1
+            --
+            --        , StoreIdx { r=0, base=bp, offset=0 }] -- Store start of array address on stack.
 
-                   , StoreIdx { r=0, base=sp, offset=0 } -- Store start of array address on stack.
-                   , AddI sp sp 1]
-
-        runSt empty (stm ast) `shouldBe` exp
-
-assignSpec :: Spec
-assignSpec = describe "assign" $ do
-    it "generates asm to reassign variable on stack" $ do
-        let def n x = AST.Def n (AST.DefInt (AST.Lit x))
-            assign n x = AST.Assign n (AST.DefInt (AST.Lit x))
-            ast = AST.Comp [def "x" 2, def "y" 3, assign "y" 4]
-            exp = [MoveI 0 2
-                 , StoreIdx { r=0, base=sp, offset=0 }
-                 , AddI sp sp 1
-
-                 , MoveI 0 3
-                 , StoreIdx { r=0, base=sp, offset=0 }
-                 , AddI sp sp 1
-
-                 , MoveI 0 4
-                 , StoreIdx { r=0, base=bp, offset=1 }]
-        runSt empty (stm ast) `shouldBe` exp
+        runSt env (stm ast) `shouldBe` exp
 
 assignArrElemSpec :: Spec
 assignArrElemSpec = describe "assign array elem" $ do
@@ -277,9 +248,9 @@ forSpec = describe "for" $ do
     it "generates asm" $ do
         let range = AST.IntRange (AST.Lit 1) (AST.Lit 5)
             ast   = AST.For "i" range (AST.Print (AST.Var "i"))
+            env   = Env.fromVars [("i", 0)]
             exp   = [MoveI { r=0, val=1 } -- Save variable i initial value.
-                   , StoreIdx { r=0, base=sp, offset=0 }
-                   , AddI sp sp 1
+                   , StoreIdx { r=0, base=bp, offset=0 }
 
                    -- Compare i to upper bound.
                    , LoadIdx { r=0, base=bp, offset=0 }
@@ -308,7 +279,7 @@ forSpec = describe "for" $ do
 
                    -- Exit
                    , Label "1"]
-        runSt empty (stm ast) `shouldBe` exp
+        runSt env (stm ast) `shouldBe` exp
 
 callSpec :: Spec
 callSpec = describe "call" $ do

@@ -12,13 +12,13 @@ type BinOp = RegIdx -> RegIdx -> RegIdx -> Instr
 
 prog :: [AST.FuncDef] -> St [Instr]
 prog [AST.FuncDef _ _ _ body] = do
-    bodyAsm <- stm body
+    bodyAsm <- funcBody [] body
     return (bodyAsm ++ [SysCall])
 prog funcs = fmap concat $ mapM toAsm (mainFirst funcs) where
     toAsm func@(AST.FuncDef name args _ body) = do
         let argNames = map AST.varName args
         end <- funcEnd func
-        bodyAsm <- zeroedBp (argsAtFrameStart argNames (block (stm body))) -- Zero compiler-BP access to variables is correct.
+        bodyAsm <- funcBody argNames body
         return ([Label name] ++ bodyAsm ++ end)
 
 -- Sorts function definitions so main is at top of list. Therefore no extra
@@ -37,9 +37,22 @@ funcEnd (AST.FuncDef "main" _ _ _) = return [SysCall]
 funcEnd (AST.FuncDef _ _ _ body) | AST.isReturn (AST.lastStm body) = return []
                                  | otherwise = return [Ret]
 
+-- Places definitions of all variables after arguments on stack.
+funcBody :: [AST.VarName] -> AST.Stm -> St [Instr]
+funcBody args body = do
+    sp <- Env.sp
+
+    let defs = AST.defs body
+        size = AST.size (map snd defs)
+
+    -- Create space for variables declared in function.
+    let incSp = [AddI sp sp (fromIntegral size)]
+    asm <- varsAtFrameStart (args ++ map fst defs) (stm body)
+    return (incSp ++ asm)
+
 stm :: AST.Stm -> St [Instr]
 stm (AST.Return val) = ret val
-stm (AST.Def name val) = def name val
+stm (AST.Def name val) = assign name val
 stm (AST.Assign name val) = assign name val
 stm (AST.AssignArr name arrIdx val) = assignArr name arrIdx val
 stm (AST.If cond body) = ifAsm cond body
@@ -58,40 +71,9 @@ ret val = do
     asm <- intVal val reg
     return (asm ++ [Ret])
 
--- Allocates space for new variables and stores on stack if variable does not
--- exist. Otherwise, sets new value of existing variable.
-def :: AST.VarName -> AST.DefVal -> St [Instr]
-def name val = do
-    exists <- Env.varExists name
-    if exists
-        then assign name val
-        else allocNew name val
-
--- Calculates int value and stores on stack. Also advances stack pointer.
--- E.g. Before def x=1
---      -----------
---      |    1    |
---      |    4    |
---      |         | <- SP
---      -----------
---
--- After:
---      -----------
---      |    1    |
---      |    4    |
---      |    X    |
---      |         | <- SP
---      -----------
-allocNew :: AST.VarName -> AST.DefVal -> St [Instr]
-allocNew name val = Env.tempReg $ \reg -> do
-    sp <- Env.sp
-    valAsm <- defVal val reg
-    pushVal <- push [reg]
-    bpOffset <- fmap Env.bpOffset get
-    Env.putVar name (bpOffset-1) -- -1 because points to one past top of stack.
-    return (valAsm ++ pushVal)
-
--- Calculates int value and reassigns existing value on stack.
+-- Calculates int value and reassigns existing value on stack. Works for first
+-- time assignment too because the space for the variable has already been
+-- created on the stack.
 assign :: AST.VarName -> AST.DefVal -> St [Instr]
 assign name val = Env.tempReg $ \reg -> do
     valAsm <- defVal val reg
@@ -122,7 +104,7 @@ ifAsm cond body = Env.tempReg $ \condReg -> do
     label   <- Env.freshLabel
     condAsm <- boolVal cond condReg
     let branchAsm = [BF condReg label]
-    bodyAsm <- block (stm body)
+    bodyAsm <- stm body
     return (condAsm ++ branchAsm ++ bodyAsm ++ [Label label])
 
 -- Return ASM for conditional execution of 'then' or 'else' branch.
@@ -132,9 +114,9 @@ ifElse cond sThen sElse = Env.tempReg $ \condReg -> do
     exitLabel <- Env.freshLabel
     condAsm   <- boolVal cond condReg
     let branchAsm = [BF condReg elseLabel]
-    thenAsm <- block (stm sThen)
+    thenAsm <- stm sThen
     let postThenAsm = [B exitLabel, Label elseLabel]
-    elseAsm <- block (stm sElse)
+    elseAsm <- stm sElse
     let postElseAsm = [Label exitLabel]
     return (condAsm ++ branchAsm ++ thenAsm ++ postThenAsm ++ elseAsm ++ postElseAsm)
 
@@ -144,7 +126,7 @@ while cond body = Env.tempReg $ \condReg -> do
     enterLabel <- Env.freshLabel
     exitLabel  <- Env.freshLabel
     condAsm    <- boolVal cond condReg
-    bodyAsm    <- block (stm body)
+    bodyAsm    <- stm body
     return (condAsm ++ [BF condReg exitLabel, Label enterLabel]
          ++ bodyAsm
          ++ condAsm ++ [BT condReg enterLabel, Label exitLabel])
@@ -302,7 +284,6 @@ push regs = do
     let store (idx, offset) = StoreIdx idx sp offset
         stores = map store (zip regs [0..])
         incSp  = AddI sp sp (fromIntegral $ length regs)
-    Env.incBpOffset (fromIntegral $ length regs)
     return (stores ++ [incSp])
 
 -- Compute each int value individually and push onto stack. Fewer registers than
@@ -344,7 +325,6 @@ pop regs = do
     let load (idx, offset) = LoadIdx idx sp (-offset)
         loads = map load (zip regs [1..])
         decSp = SubI sp sp (fromIntegral $ length regs)
-    Env.incBpOffset (-(fromIntegral $ length regs))
     return (loads ++ [decSp])
 
 -- Pop a number of of elements from the top of the stack.
@@ -352,32 +332,33 @@ popNum :: Val -> St [Instr]
 popNum 0 = return []
 popNum n = do
     sp <- Env.sp
-    Env.incBpOffset (-n)
     return [SubI sp sp n]
 
--- Places arguments at start of frame, i.e. at bpOffset 0, 1, 2, etc
-argsAtFrameStart :: [AST.VarName] -> St [Instr] -> St [Instr]
-argsAtFrameStart argNames st = state $ \sOld ->
-    let (is, sNew) = runState st (Env.putArgs argNames sOld)
+-- Places variables at start of frame, i.e. at bp + 0, 1, 2, etc
+varsAtFrameStart :: [AST.VarName] -> St [Instr] -> St [Instr]
+varsAtFrameStart names st = state $ \sOld ->
+    let (is, sNew) = runState st (Env.putVarsAtStart names sOld)
     in (is, Env.restoreEnv sOld sNew)
+--
+-- -- Compute ASM with zeroed Bp, then return Bp to value before call.
+-- zeroedBp :: St [Instr] -> St [Instr]
+-- zeroedBp st = state $ \sOld ->
+--     let savedBpOffset = Env.bpOffset sOld
+--         (is, sNew) = runState st (Env.setBpOffset 0 sOld)
+--     in (is, Env.setBpOffset savedBpOffset sNew)
+--
+-- -- Restores free registers, mapping from variables to addresses, and bpOffset
+-- -- after block.
+-- block :: St [Instr] -> St [Instr]
+-- block = undefined
 
--- Compute ASM with zeroed Bp, then return Bp to value before call.
-zeroedBp :: St [Instr] -> St [Instr]
-zeroedBp st = state $ \sOld ->
-    let savedBpOffset = Env.bpOffset sOld
-        (is, sNew) = runState st (Env.setBpOffset 0 sOld)
-    in (is, Env.setBpOffset savedBpOffset sNew)
-
--- Restores free registers, mapping from variables to addresses, and bpOffset
--- after block.
-block :: St [Instr] -> St [Instr]
-block st = state $ \sOld ->
-    let (is, sNew) = runState st sOld
-        sRestored  = Env.restoreEnv sOld sNew
-        bpOld      = Env.bpOffset sOld
-        bpNew      = Env.bpOffset sNew
-        sp         = Env.spIdx sNew
-        decSp      = SubI sp sp (bpNew - bpOld)
-    in if bpNew - bpOld == 0
-        then (is, sRestored)
-        else (is ++ [decSp], sRestored) -- Only dec sp if it was modified
+-- block st = state $ \sOld ->
+--     let (is, sNew) = runState st sOld
+--         sRestored  = Env.restoreEnv sOld sNew
+--         bpOld      = Env.bpOffset sOld
+--         bpNew      = Env.bpOffset sNew
+--         sp         = Env.spIdx sNew
+--         decSp      = SubI sp sp (bpNew - bpOld)
+--     in if bpNew - bpOld == 0
+--         then (is, sRestored)
+--         else (is ++ [decSp], sRestored) -- Only dec sp if it was modified

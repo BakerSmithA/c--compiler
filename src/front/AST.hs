@@ -93,3 +93,9 @@ defs (IfElse _ sThen sElse) = defs sThen ++ defs sElse
 defs (For _ _ body) = defs body
 defs (While _ body) = defs body
 defs _ = []
+
+-- Return total size, in ints, of the declared variables.
+size :: [DefVal] -> Int
+size = foldr ((+) . s) 0 where
+    s (DefInt _) = 1
+    s (DefArr elems) = length elems + 1 -- +1 for pointer to array start, as well as elems.
