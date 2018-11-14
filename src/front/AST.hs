@@ -83,3 +83,13 @@ lastStm stm = stm
 isReturn :: Stm -> Bool
 isReturn (Return _) = True
 isReturn _ = False
+
+-- Returns all the definitions, in the order they were declared.
+defs :: Stm -> [(VarName, DefVal)]
+defs (Def name val) = [(name, val)]
+defs (Comp stms) = foldr ((++) . defs) [] stms
+defs (If _ body) = defs body
+defs (IfElse _ sThen sElse) = defs sThen ++ defs sElse
+defs (For _ _ body) = defs body
+defs (While _ body) = defs body
+defs _ = []
