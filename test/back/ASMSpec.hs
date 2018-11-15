@@ -34,6 +34,7 @@ asmSpec = describe "asm generation" $ do
     whileSpec
     forSpec
     callSpec
+    funcDefSpec
 
 pushSpec :: Spec
 pushSpec = describe "push" $ do
@@ -314,3 +315,34 @@ callSpec = describe "call" $ do
                 , LoadIdx {r = bp, base = sp, offset = -2}
                 , SubI {r = sp, x = sp, i = 2}]
         runSt env (stm ast) `shouldBe` exp
+
+funcDefSpec :: Spec
+funcDefSpec = describe "funcDef" $ do
+    it "reserves space for int variables" $ do
+        let body = AST.Comp [AST.Def "x" (AST.DefInt (AST.Lit 1)), AST.Def "y" (AST.DefInt (AST.Lit 2))]
+            def  = [AST.FuncDef "main" [] Nothing body]
+            exp  = [AddI sp sp 2 -- Reserve space for vars.
+
+                  , MoveI 0 1 -- Store variables
+                  , StoreIdx { r=0, base=bp, offset=0 }
+                  , MoveI 0 2
+                  , StoreIdx { r=0, base=bp, offset=1 }
+
+                  , SysCall]
+        runSt empty (prog def) `shouldBe` exp
+
+    it "reserves space for arrays" $ do
+        let body = AST.Comp [AST.Def "x" (AST.DefArr [AST.Lit 5, AST.Lit 10])]
+            def  = [AST.FuncDef "main" [] Nothing body]
+            exp  = [AddI sp sp 3 -- Reserve space for array and pointer.
+
+                  , MoveI 0 1 -- Compute and store pointer to first element.
+                  , StoreIdx { r=0, base=bp, offset=0 }
+
+                  , LoadIdx { r=0, base=bp, offset=0 }
+                  , StoreIdx { r=0, base=0, offset=0 }
+                  , MoveI 0 10
+                  , StoreIdx { r=0, base=0, offset=1 }
+
+                  , SysCall]
+        runSt empty (prog def) `shouldBe` exp
