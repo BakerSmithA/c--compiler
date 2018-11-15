@@ -38,9 +38,9 @@ funcBodyAndStackClean name args body = do
         size = AST.size (map snd defs)
 
     -- Create space for variables declared in function.
-    let incSp = [AddI sp sp (fromIntegral size)]
+    reserveVarSpace <- addConst (fromIntegral size)
     asm <- varsAtFrameStart (args ++ map fst defs) size (funcBody name body)
-    return (incSp ++ asm)
+    return (reserveVarSpace ++ asm)
 
 -- Generates ASM for function body and return.
 funcBody :: AST.FuncName -> AST.Stm -> St [Instr]
@@ -75,7 +75,7 @@ ret :: St [Instr]
 ret = do
     sp <- Env.sp
     localVarsSize <- fmap Env.localVarsSize get
-    let pop = [SubI sp sp (fromIntegral localVarsSize)]
+    pop <- subConst (fromIntegral localVarsSize)
     return (pop ++ [Ret])
 
 -- Calculates int value and populates return register with it.
@@ -161,7 +161,7 @@ call (AST.FuncCall name args) = Env.tempRegs args $ \valsAndRegs -> do
     let setRegs = [Move bp sp, MoveLabel lr (LabelAddr retLabel)]
     pushArgs <- push argRegs
     let branch = [B name, Label retLabel]
-    popArgs <- popNum (fromIntegral $ length args)
+    popArgs <- subConst (fromIntegral $ length args)
     restoreRegs <- pop [lr, bp]
 
     return (evalArgs
@@ -342,10 +342,17 @@ pop regs = do
         decSp = SubI sp sp (fromIntegral $ length regs)
     return (loads ++ [decSp])
 
--- Pop a number of of elements from the top of the stack.
-popNum :: Val -> St [Instr]
-popNum 0 = return []
-popNum n = do
+-- Returns add instr, or nothing if add 0.
+addConst :: Val -> St [Instr]
+addConst 0 = return []
+addConst n = do
+    sp <- Env.sp
+    return [AddI sp sp n]
+
+-- Returns sub instr, or nothing if sub 0.
+subConst :: Val -> St [Instr]
+subConst 0 = return []
+subConst n = do
     sp <- Env.sp
     return [SubI sp sp n]
 
