@@ -53,10 +53,17 @@ restoreEnv old new = new {
 }
 
 -- Adds arguments to bp + 0, 1, 2, etc, i.e. at top of call frame.
-putVarsAtStart :: [VarName] -> Int -> Env -> Env
-putVarsAtStart names localVarsSize env = env { varBpOffset = varBpOffset', localVarsSize = localVarsSize } where
+putArgs :: [VarName] -> Env -> Env
+putArgs names env = env { varBpOffset = varBpOffset' } where
     varBpOffset' = foldr ins (varBpOffset env) (zip names [0..])
     ins (name, reg) = Map.insert name reg
+
+-- Add vars to bp at offset according to accumulated size of previous variables.
+putVars :: [(VarName, VarSize)] -> Addr -> Env -> Env
+putVars ns offset env = env { varBpOffset = varBpOffset', localVarsSize = fromIntegral totalSize } where
+    (varBpOffset', totalSize) = foldl ins (varBpOffset env, 0) ns
+    ins (vars, accSize) (name, size) = (Map.insert name (fromIntegral (accSize + offset')) vars, accSize + size)
+    offset' = fromIntegral offset
 
 -- Return index of stack pointer register.
 sp :: St RegIdx

@@ -11,9 +11,7 @@ import Data.List (sortBy)
 type BinOp = RegIdx -> RegIdx -> RegIdx -> Instr
 
 prog :: [AST.FuncDef] -> St [Instr]
-prog [AST.FuncDef name _ _ body] = do
-    bodyAsm <- funcBodyAndStackClean name [] body
-    return (bodyAsm ++ [SysCall])
+prog [AST.FuncDef name _ _ body] = funcBodyAndStackClean name [] body
 prog funcs = fmap concat $ mapM toAsm (mainFirst funcs) where
     toAsm (AST.FuncDef name args _ body) = do
         let argNames = map AST.varName args
@@ -33,13 +31,13 @@ mainFirst = sortBy order where
 funcBodyAndStackClean :: AST.FuncName -> [AST.VarName] -> AST.Stm -> St [Instr]
 funcBodyAndStackClean name args body = do
     sp <- Env.sp
-
-    let defs = AST.defs body
-        size = AST.size (map snd defs)
+    let defs  = AST.defs body
+        sizes = map (\(n, val) -> (n, AST.size val)) defs
+        totalSize = AST.totalSize (map snd defs)
 
     -- Create space for variables declared in function.
-    reserveVarSpace <- addConst (fromIntegral size)
-    asm <- varsAtFrameStart (args ++ map fst defs) size (funcBody name body)
+    reserveVarSpace <- addConst (fromIntegral totalSize)
+    asm <- varsAtFrameStart args sizes (funcBody name body)
     return (reserveVarSpace ++ asm)
 
 -- Generates ASM for function body and return.
@@ -355,11 +353,13 @@ subConst n = do
     return [SubI sp sp n]
 
 -- Places variables at start of frame, i.e. at bp + 0, 1, 2, etc
-varsAtFrameStart :: [AST.VarName] -> Int -> St [Instr] -> St [Instr]
-varsAtFrameStart names localVarsSize st = state $ \sOld ->
-    let (is, sNew) = runState st (Env.putVarsAtStart names localVarsSize sOld)
+varsAtFrameStart :: [AST.VarName] -> [(AST.VarName, AST.VarSize)] -> St [Instr] -> St [Instr]
+varsAtFrameStart args localVars st = state $ \sOld ->
+    let s  = Env.putArgs args sOld
+        s' = Env.putVars localVars (fromIntegral (length args)) s
+        (is, sNew) = runState st s'
     in (is, Env.restoreEnv sOld sNew)
---
+
 -- -- Compute ASM with zeroed Bp, then return Bp to value before call.
 -- zeroedBp :: St [Instr] -> St [Instr]
 -- zeroedBp st = state $ \sOld ->

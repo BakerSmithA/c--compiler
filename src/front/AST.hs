@@ -5,6 +5,8 @@ type VarName = Id
 type FuncName = Id
 type ArrLen = Int
 
+type VarSize = Int
+
 data Type = IntType
           | ArrType Type (Maybe ArrLen)
           deriving (Eq, Show)
@@ -94,8 +96,11 @@ defs (For name range body) = defs (forAsWhile name range body)
 defs (While _ body) = defs body
 defs _ = []
 
--- Return total size, in ints, of the declared variables.
-size :: [DefVal] -> Int
-size = foldr ((+) . s) 0 where
-    s (DefInt _) = 1
-    s (DefArr elems) = length elems + 1 -- +1 for pointer to array start, as well as elems.
+-- Return size, in ints, of the declared variable.
+size :: DefVal -> VarSize
+size (DefInt _) = 1
+size (DefArr elems) = length elems + 1 -- +1 for pointer to array start, as well as elems.
+
+-- Return total size, in ints, of all declarsed variables.
+totalSize :: [DefVal] -> VarSize
+totalSize = foldr ((+) . size) 0
