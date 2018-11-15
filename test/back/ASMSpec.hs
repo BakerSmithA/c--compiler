@@ -174,19 +174,12 @@ defSpec = describe "def" $ do
     it "generates asm for def arr" $ do
         let elems = [AST.Lit 1, AST.Lit 2]
             ast   = (AST.Def "x" (AST.DefArr elems))
-            env   = Env.fromVars [("x", 0)]
-            exp   = []
-
-            -- exp   = [Move 0 sp -- Save start address.
-            --
-            --        , MoveI 1 1 -- Push elements of array.
-            --        , StoreIdx { r=1, base=bp, offset=0 }
-            --        , AddI sp sp 1
-            --        , MoveI 1 2
-            --        , StoreIdx { r=1, base=bp, offset=0 }
-            --        , AddI sp sp 1
-            --
-            --        , StoreIdx { r=0, base=bp, offset=0 }] -- Store start of array address on stack.
+            env   = Env.fromVars [("x", 2)]
+            exp   = [LoadIdx { r=0, base=bp, offset=2 } -- Load pointer to start of array.
+                   , MoveI 1 1
+                   , StoreIdx { r=1, base=0, offset=0 }
+                   , MoveI 1 2
+                   , StoreIdx { r=1, base=0, offset=1 }]
 
         runSt env (stm ast) `shouldBe` exp
 

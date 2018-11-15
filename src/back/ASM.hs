@@ -59,8 +59,8 @@ funcEnd _ body   | AST.isReturn (AST.lastStm body) = return []
 
 stm :: AST.Stm -> St [Instr]
 stm (AST.Return val) = retVal val
-stm (AST.Def name val) = assign name val
-stm (AST.Assign name val) = assign name val
+stm (AST.Def name val) = defVal name val
+stm (AST.Assign name val) = defVal name val
 stm (AST.AssignArr name arrIdx val) = assignArr name arrIdx val
 stm (AST.If cond body) = ifAsm cond body
 stm (AST.IfElse cond sThen sElse) = ifElse cond sThen sElse
@@ -85,15 +85,6 @@ retVal val = do
     valAsm <- intVal val reg
     retAsm <- ret
     return (valAsm ++ retAsm)
-
--- Calculates int value and reassigns existing value on stack. Works for first
--- time assignment too because the space for the variable has already been
--- created on the stack.
-assign :: AST.VarName -> AST.DefVal -> St [Instr]
-assign name val = Env.tempReg $ \reg -> do
-    valAsm <- defVal val reg
-    saveAsm <- storeVar name reg
-    return (valAsm ++ saveAsm)
 
 -- Return instructions to store variable in register into memory.
 storeVar :: AST.VarName -> RegIdx -> St [Instr]
@@ -191,18 +182,27 @@ println :: St [Instr]
 println = return [PrintLn]
 
 -- Return instructions to store either int value in register, or pointer to array.
-defVal :: AST.DefVal -> RegIdx -> St [Instr]
-defVal (AST.DefInt val)   reg = intVal val reg
-defVal (AST.DefArr elems) reg = arrPtr elems reg
+defVal :: AST.VarName -> AST.DefVal -> St [Instr]
+defVal name (AST.DefInt val)   = defInt name val
+defVal name (AST.DefArr elems) = defArr name elems
 
--- Return instructions to push elements of array onto stack and store a pointer
--- to the start of the array in reg.
-arrPtr :: [AST.IntVal] -> RegIdx -> St [Instr]
-arrPtr elems reg = do
-    sp <- Env.sp
-    let saveStart = Move reg sp
-    pushAsm <- seqPush elems
-    return (saveStart:pushAsm)
+-- Return instructions to store value at location of variable on stack.
+defInt :: AST.VarName -> AST.IntVal -> St [Instr]
+defInt name val = Env.tempReg $ \reg -> do
+    bp <- Env.bp
+    valAsm <- intVal val reg
+    offset <- Env.getVarOffset name
+    let storeAsm = [StoreIdx { r=reg, base=bp, offset=offset }]
+    return (valAsm ++ storeAsm)
+
+-- Return instructions to push elements of array onto stack in location pointed
+-- to by value stored in variable.
+defArr :: AST.VarName -> [AST.IntVal] -> St [Instr]
+defArr name elems = Env.tempReg $ \reg -> do
+    bp <- Env.bp
+    varAsm <- var name reg
+    storeAsm <- storeAll elems reg
+    return (varAsm ++ storeAsm)
 
 -- Return instructions to store int value in supplied register.
 intVal :: AST.IntVal -> RegIdx -> St [Instr]
@@ -273,6 +273,16 @@ notEq v1 v2 reg = do
     eqAsm <- op Eq intVal v1 v2 reg
     return (eqAsm ++ [Not reg reg])
 
+-- Compute each int value individually and stores at base + 0, 1, 2, etc
+storeAll :: [AST.IntVal] -> RegIdx -> St [Instr]
+storeAll vals baseReg = Env.tempReg $ \reg -> storeAll' vals reg 0 where
+    storeAll' [] _ _  = return []
+    storeAll' (val:vals) reg offset = do
+        valAsm  <- intVal val reg
+        let storeAsm = [StoreIdx { r=reg, base=baseReg, offset=offset }]
+        restAsm <- storeAll' vals reg (offset+1)
+        return (valAsm ++ storeAsm ++ restAsm)
+
 -- Push the values in the registers to the top of the stack.
 -- Assumes sp points to next free address on stack.
 --
@@ -300,18 +310,6 @@ push regs = do
         stores = map store (zip regs [0..])
         incSp  = AddI sp sp (fromIntegral $ length regs)
     return (stores ++ [incSp])
-
--- Compute each int value individually and push onto stack. Fewer registers than
--- `push` as not all int values are held in registers at the same time. However,
--- requires more sp update instructions.
-seqPush :: [AST.IntVal] -> St [Instr]
-seqPush vals = Env.tempReg $ \reg -> seqPush' vals reg where
-    seqPush' []         _   = return []
-    seqPush' (val:vals) reg = do
-        valAsm  <- intVal val reg
-        pushAsm <- push [reg]
-        restAsm <- seqPush' vals reg
-        return (valAsm ++ pushAsm ++ restAsm)
 
 -- Pop values from the top of the stack into registers.
 -- Assumes sp points to free address on top of stack.
