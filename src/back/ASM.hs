@@ -11,15 +11,14 @@ import Data.List (sortBy)
 type BinOp = RegIdx -> RegIdx -> RegIdx -> Instr
 
 prog :: [AST.FuncDef] -> St [Instr]
-prog [AST.FuncDef _ _ _ body] = do
-    bodyAsm <- funcBody [] body
+prog [AST.FuncDef name _ _ body] = do
+    bodyAsm <- funcBodyAndStackClean name [] body
     return (bodyAsm ++ [SysCall])
 prog funcs = fmap concat $ mapM toAsm (mainFirst funcs) where
-    toAsm func@(AST.FuncDef name args _ body) = do
+    toAsm (AST.FuncDef name args _ body) = do
         let argNames = map AST.varName args
-        end <- funcEnd func
-        bodyAsm <- funcBody argNames body
-        return ([Label name] ++ bodyAsm ++ end)
+        bodyAsm <- funcBodyAndStackClean name argNames body
+        return ([Label name] ++ bodyAsm)
 
 -- Sorts function definitions so main is at top of list. Therefore no extra
 -- code is required to branch into main.
@@ -29,17 +28,10 @@ mainFirst = sortBy order where
     order _ (AST.FuncDef "main" _ _ _) = GT
     order _ _ = EQ
 
--- Return instructions to place at end of function.
--- I.e. SysCall at end of main, return at end of functions (unless they already)
--- have a return.
-funcEnd :: AST.FuncDef -> St [Instr]
-funcEnd (AST.FuncDef "main" _ _ _) = return [SysCall]
-funcEnd (AST.FuncDef _ _ _ body) | AST.isReturn (AST.lastStm body) = return []
-                                 | otherwise = return [Ret]
-
--- Places definitions of all variables after arguments on stack.
-funcBody :: [AST.VarName] -> AST.Stm -> St [Instr]
-funcBody args body = do
+-- Outputs saving space for variables, function body, function return, and stack
+-- cleanup.
+funcBodyAndStackClean :: AST.FuncName -> [AST.VarName] -> AST.Stm -> St [Instr]
+funcBodyAndStackClean name args body = do
     sp <- Env.sp
 
     let defs = AST.defs body
@@ -47,11 +39,26 @@ funcBody args body = do
 
     -- Create space for variables declared in function.
     let incSp = [AddI sp sp (fromIntegral size)]
-    asm <- varsAtFrameStart (args ++ map fst defs) (stm body)
+    asm <- varsAtFrameStart (args ++ map fst defs) size (funcBody name body)
     return (incSp ++ asm)
 
+-- Generates ASM for function body and return.
+funcBody :: AST.FuncName -> AST.Stm -> St [Instr]
+funcBody name body = do
+    bodyAsm <- stm body
+    endAsm <- funcEnd name body
+    return (bodyAsm ++ endAsm)
+
+-- Return instructions to place at end of function.
+-- I.e. SysCall at end of main, return at end of functions (unless they already)
+-- have a return.
+funcEnd :: AST.FuncName -> AST.Stm -> St [Instr]
+funcEnd "main" _ = return [SysCall]
+funcEnd _ body   | AST.isReturn (AST.lastStm body) = return []
+                 | otherwise = ret
+
 stm :: AST.Stm -> St [Instr]
-stm (AST.Return val) = ret val
+stm (AST.Return val) = retVal val
 stm (AST.Def name val) = assign name val
 stm (AST.Assign name val) = assign name val
 stm (AST.AssignArr name arrIdx val) = assignArr name arrIdx val
@@ -64,12 +71,20 @@ stm (AST.Comp ss) = comp ss
 stm (AST.Print val) = printAsm val
 stm (AST.PrintLn) = println
 
+ret :: St [Instr]
+ret = do
+    sp <- Env.sp
+    localVarsSize <- fmap Env.localVarsSize get
+    let pop = [SubI sp sp (fromIntegral localVarsSize)]
+    return (pop ++ [Ret])
+
 -- Calculates int value and populates return register with it.
-ret :: AST.IntVal -> St [Instr]
-ret val = do
+retVal :: AST.IntVal -> St [Instr]
+retVal val = do
     reg <- Env.ret
-    asm <- intVal val reg
-    return (asm ++ [Ret])
+    valAsm <- intVal val reg
+    retAsm <- ret
+    return (valAsm ++ retAsm)
 
 -- Calculates int value and reassigns existing value on stack. Works for first
 -- time assignment too because the space for the variable has already been
@@ -335,9 +350,9 @@ popNum n = do
     return [SubI sp sp n]
 
 -- Places variables at start of frame, i.e. at bp + 0, 1, 2, etc
-varsAtFrameStart :: [AST.VarName] -> St [Instr] -> St [Instr]
-varsAtFrameStart names st = state $ \sOld ->
-    let (is, sNew) = runState st (Env.putVarsAtStart names sOld)
+varsAtFrameStart :: [AST.VarName] -> Int -> St [Instr] -> St [Instr]
+varsAtFrameStart names localVarsSize st = state $ \sOld ->
+    let (is, sNew) = runState st (Env.putVarsAtStart names localVarsSize sOld)
     in (is, Env.restoreEnv sOld sNew)
 --
 -- -- Compute ASM with zeroed Bp, then return Bp to value before call.

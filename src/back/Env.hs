@@ -25,6 +25,9 @@ data Env = Env {
     -- Offset of where variables/arguments are stored on the stack, relative to
     -- base pointer (bp).
   , varBpOffset :: Map VarName Val
+    -- Total size of variables declared in the current function. Used to decrement
+    -- the SP at function return. This DOES NOT include size of arguments.
+  , localVarsSize :: Int
     -- Used to generate fresh labels for branch locations.
   , currLabel :: Int
 }
@@ -34,7 +37,7 @@ type St a = State Env a
 
 -- Environment with no variables, arguments, or used labels.
 empty :: Env
-empty = Env 13 14 15 16 (Set.fromList [0..12]) Map.empty 0
+empty = Env 13 14 15 16 (Set.fromList [0..12]) Map.empty 0 0
 
 -- Environment containing variables at given offset past bp.
 fromVars :: [(VarName, Val)] -> Env
@@ -46,11 +49,12 @@ restoreEnv :: Env -> Env -> Env
 restoreEnv old new = new {
     freeRegs = (freeRegs old)
   , varBpOffset = (varBpOffset old)
+  , localVarsSize = (localVarsSize old)
 }
 
 -- Adds arguments to bp + 0, 1, 2, etc, i.e. at top of call frame.
-putVarsAtStart :: [VarName] -> Env -> Env
-putVarsAtStart names env = env { varBpOffset = varBpOffset' } where
+putVarsAtStart :: [VarName] -> Int -> Env -> Env
+putVarsAtStart names localVarsSize env = env { varBpOffset = varBpOffset', localVarsSize = localVarsSize } where
     varBpOffset' = foldr ins (varBpOffset env) (zip names [0..])
     ins (name, reg) = Map.insert name reg
 
