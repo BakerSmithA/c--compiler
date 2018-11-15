@@ -90,7 +90,7 @@ defs (Def name val) = [(name, val)]
 defs (Comp stms) = foldr ((++) . defs) [] stms
 defs (If _ body) = defs body
 defs (IfElse _ sThen sElse) = defs sThen ++ defs sElse
-defs (For _ _ body) = defs body
+defs (For name range body) = defs (forAsWhile name range body)
 defs (While _ body) = defs body
 defs _ = []
 
