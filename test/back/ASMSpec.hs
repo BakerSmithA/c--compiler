@@ -348,3 +348,17 @@ funcDefSpec = describe "funcDef" $ do
                   , SubI sp sp 3 -- Remove reserved space.
                   , SysCall]
         runSt empty (prog def) `shouldBe` exp
+
+    it "offsets vars locations by number of arguments" $ do
+        let body = AST.Comp [AST.Def "x" (AST.DefInt (AST.Lit 1)), AST.Def "y" (AST.DefInt (AST.Lit 2))]
+            def  = [AST.FuncDef "main" [AST.TypedVar "a1" AST.IntType, AST.TypedVar "a2" AST.IntType] Nothing body]
+            exp  = [AddI sp sp 2 -- Reserve space for vars.
+
+                  , MoveI 0 1 -- Store variables
+                  , StoreIdx { r=0, base=bp, offset=2 } -- Offset because 2 vars.
+                  , MoveI 0 2
+                  , StoreIdx { r=0, base=bp, offset=3 }
+
+                  , SubI sp sp 2 -- Remove reserved space.
+                  , SysCall]
+        runSt empty (prog def) `shouldBe` exp
