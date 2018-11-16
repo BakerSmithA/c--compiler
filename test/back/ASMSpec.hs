@@ -328,6 +328,7 @@ funcDefSpec = describe "funcDef" $ do
                   , MoveI 0 2
                   , StoreIdx { r=0, base=bp, offset=1 }
 
+                  , SubI sp sp 2 -- Remove reserved space.
                   , SysCall]
         runSt empty (prog def) `shouldBe` exp
 
@@ -344,5 +345,6 @@ funcDefSpec = describe "funcDef" $ do
                   , MoveI 0 10
                   , StoreIdx { r=0, base=0, offset=1 }
 
+                  , SubI sp sp 3 -- Remove reserved space.
                   , SysCall]
         runSt empty (prog def) `shouldBe` exp

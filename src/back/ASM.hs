@@ -51,7 +51,7 @@ funcBody name body = do
 -- I.e. SysCall at end of main, return at end of functions (unless they already)
 -- have a return.
 funcEnd :: AST.FuncName -> AST.Stm -> St [Instr]
-funcEnd "main" _ = return [SysCall]
+funcEnd "main" _ = terminate
 funcEnd _ body   | AST.isReturn (AST.lastStm body) = return []
                  | otherwise = ret
 
@@ -71,9 +71,7 @@ stm (AST.PrintLn) = println
 
 ret :: St [Instr]
 ret = do
-    sp <- Env.sp
-    localVarsSize <- fmap Env.localVarsSize get
-    pop <- subConst (fromIntegral localVarsSize)
+    pop <- popLocalVars
     return (pop ++ [Ret])
 
 -- Calculates int value and populates return register with it.
@@ -83,6 +81,19 @@ retVal val = do
     valAsm <- intVal val reg
     retAsm <- ret
     return (valAsm ++ retAsm)
+
+-- Use SysCall to exit program
+terminate :: St [Instr]
+terminate = do
+    pop <- popLocalVars
+    return (pop ++ [SysCall])
+
+-- Return instructions to subtract the size of local vars from stack.
+popLocalVars :: St [Instr]
+popLocalVars = do
+    sp <- Env.sp
+    localVarsSize <- fmap Env.localVarsSize get
+    subConst (fromIntegral localVarsSize)
 
 -- Return instructions to store variable in register into memory.
 storeVar :: AST.VarName -> RegIdx -> St [Instr]
