@@ -61,8 +61,8 @@ putArgs names env = env { varBpOffset = varBpOffset' } where
 -- Add vars to bp at offset according to accumulated size of previous variables.
 putVars :: [(VarName, VarSize)] -> Addr -> Env -> Env
 putVars ns offset env = env { varBpOffset = varBpOffset', localVarsSize = fromIntegral totalSize } where
-    (varBpOffset', totalSize) = foldl ins (varBpOffset env, 0) ns
-    ins (vars, accSize) (name, size) = (Map.insert name (fromIntegral (accSize + offset')) vars, accSize + size)
+    (varBpOffset', totalSize) = foldr ins (varBpOffset env, 0) ns
+    ins (name, size) (vars, accSize) = (Map.insert name (fromIntegral (accSize + offset')) vars, accSize + size)
     offset' = fromIntegral offset
 
 -- Return index of stack pointer register.

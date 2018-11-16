@@ -324,9 +324,9 @@ funcDefSpec = describe "funcDef" $ do
             exp  = [AddI sp sp 2 -- Reserve space for vars.
 
                   , MoveI 0 1 -- Store variables
-                  , StoreIdx { r=0, base=bp, offset=0 }
-                  , MoveI 0 2
                   , StoreIdx { r=0, base=bp, offset=1 }
+                  , MoveI 0 2
+                  , StoreIdx { r=0, base=bp, offset=0 }
 
                   , SubI sp sp 2 -- Remove reserved space.
                   , SysCall]
@@ -359,9 +359,9 @@ funcDefSpec = describe "funcDef" $ do
             exp  = [AddI sp sp 2 -- Reserve space for vars.
 
                   , MoveI 0 1 -- Store variables
-                  , StoreIdx { r=0, base=bp, offset=2 } -- Offset because 2 vars.
+                  , StoreIdx { r=0, base=bp, offset=3 } -- Offset because 2 vars.
                   , MoveI 0 2
-                  , StoreIdx { r=0, base=bp, offset=3 }
+                  , StoreIdx { r=0, base=bp, offset=2 }
 
                   , SubI sp sp 2 -- Remove reserved space.
                   , SysCall]
