@@ -337,7 +337,10 @@ funcDefSpec = describe "funcDef" $ do
             def  = [AST.FuncDef "main" [] Nothing body]
             exp  = [AddI sp sp 3 -- Reserve space for array and pointer.
 
-                  , MoveI 0 1 -- Compute and store pointer to first element.
+                   -- Compute and store pointer to first element. SP points to
+                   -- end of reserved section.
+                  , Move 0 sp
+                  , SubI 0 0 2
                   , StoreIdx { r=0, base=bp, offset=0 }
 
                   , LoadIdx { r=0, base=bp, offset=0 }
