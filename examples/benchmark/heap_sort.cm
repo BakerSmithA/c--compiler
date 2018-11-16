@@ -1,10 +1,10 @@
 def main() {
-    let xs = [5, 9, 2, 1]
-    print_arr(xs, 4)
+    let xs = [5, 67, 9, 34, 2, 1]
+    print_arr(xs, 6)
     println()
 
-    heap_sort(xs, 4)
-    print_arr(xs, 4)
+    heap_sort(xs, 6)
+    print_arr(xs, 6)
 }
 
 def heap_sort(xs: Int[], n: Int) {
