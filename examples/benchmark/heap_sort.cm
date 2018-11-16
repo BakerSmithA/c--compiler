@@ -1,0 +1,55 @@
+def main() {
+    let xs = [5, 9, 2, 1]
+    print_arr(xs, 4)
+    println()
+
+    heap_sort(xs, 4)
+    print_arr(xs, 4)
+}
+
+def heap_sort(xs: Int[], n: Int) {
+    let i = n / 2 - 1
+    while i > 0 or i == 0 {
+        heapify(xs, n, i)
+        i = i - 1
+    }
+
+    i = n - 1
+    while i > 0 or i == 0 {
+        swap(xs, 0, i)
+        heapify(xs, i, 0)
+        i = i - 1
+    }
+}
+
+def heapify(xs: Int[], n: Int, root: Int) {
+    let largest = root
+    let l = 2 * root + 1
+    let r = 2 * root + 2
+
+    if l < n and xs[l] > xs[largest] {
+        largest = l
+    }
+
+    if r < n and xs[r] > xs[largest] {
+        largest = r
+    }
+
+    if largest != root {
+        swap(xs, root, largest)
+        heapify(xs, n, largest)
+    }
+}
+
+def swap(xs: Int[], i: Int, j: Int) {
+    let tmp = xs[i]
+    xs[i] = xs[j]
+    xs[j] = tmp
+}
+
+def print_arr(xs: Int[], n: Int) {
+    for let i in 0..<n {
+        print(xs[i])
+        println()
+    }
+}
