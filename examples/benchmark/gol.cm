@@ -1,12 +1,16 @@
 def main() {
-    let grid1 = [0, 0, 0, 0,  0, 1, 1, 0,  0, 1, 0, 0,  0, 0, 0, 0]
-    let grid2 = [0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0]
+    let grid1 = [0, 0, 1, 0, 0,  0, 0, 0, 1, 0,  0, 1, 1, 1, 0,  0, 0, 0, 0, 0,  0, 0, 0, 0, 0]
+    let grid2 = [0, 0, 0, 0, 0,  0, 0, 0, 0, 0,  0, 0, 0, 0, 0,  0, 0, 0, 0, 0,  0, 0, 0, 0, 0]
 
-    step(grid1, grid2, 4, 4)
+    run(grid1, grid2, 5, 5)
+}
 
-    print_grid(grid1, 4, 4)
+def run(grid1: Int[], grid2: Int[], w: Int, h: Int) {
+    step(grid1, grid2, w, h)
+
+    print_grid(grid1, w, h)
     println()
-    print_grid(grid2, 4, 4)
+    print_grid(grid2, w, h)
 }
 
 def step(grid: Int[], new_grid: Int[], w: Int, h: Int) {
