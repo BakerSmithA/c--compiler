@@ -242,6 +242,7 @@ intVal (AST.ArrAccess name idx) = arrAccess name idx
 intVal (AST.Add val1 val2)      = op Add intVal val1 val2
 intVal (AST.Sub val1 val2)      = op Sub intVal val1 val2
 intVal (AST.Mult val1 val2)     = op Mult intVal val1 val2
+intVal (AST.Div val1 val2)      = op Div intVal val1 val2
 
 -- Return instructions to store all int values in supplied registers.
 intValAll :: [(AST.IntVal, RegIdx)] -> St [Instr]

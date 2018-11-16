@@ -139,7 +139,7 @@ intVal' = try (ArrAccess <$> snakeId <*> square intVal)
      <|> Lit <$> num
 
 intOps :: [[Operator Parser IntVal]]
-intOps = [[InfixL (Mult <$ tok "*")],
+intOps = [[InfixL (Mult <$ tok "*"), InfixL (Div <$ tok "/")],
           [InfixL (Add <$ tok "+"), InfixL (Sub <$ tok "-")]]
 
 intVal :: Parser IntVal

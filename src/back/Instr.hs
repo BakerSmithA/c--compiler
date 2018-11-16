@@ -60,6 +60,7 @@ data Instr
     | Sub  { r :: RegIdx, x :: RegIdx, y :: RegIdx } -- r <- [x] - [y]
     | SubI { r :: RegIdx, x :: RegIdx, i :: Val }    -- r <- [x] - i
     | Mult { r :: RegIdx, x :: RegIdx, y :: RegIdx } -- r <- [x] * [y]
+    | Div  { r :: RegIdx, x :: RegIdx, y :: RegIdx } -- r <- [x] / [y]
     | Eq   { r :: RegIdx, x :: RegIdx, y :: RegIdx } -- r <- [x] == [y]
     | Lt   { r :: RegIdx, x :: RegIdx, y :: RegIdx } -- r <- [x] < [y]
     | Or   { r :: RegIdx, x :: RegIdx, y :: RegIdx } -- r <- [x] || [y]
@@ -108,6 +109,7 @@ encoded (AddI r x i) _ = [16, r, x] ++ encodeI32 i
 encoded (Sub r x y)  _ = [6, r, x, y]
 encoded (SubI r x i) _ = [17, r, x] ++ encodeI32 i
 encoded (Mult r x y) _ = [18, r, x, y]
+encoded (Div r x y)  _ = [23, r, x, y]
 encoded (Eq r x y)   _ = [7, r, x, y]
 encoded (Lt r x y)   _ = [19, r, x, y]
 encoded (Or r x y)   _ = [8, r, x, y]

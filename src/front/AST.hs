@@ -27,6 +27,7 @@ data IntVal = Var VarName
             | Add IntVal IntVal
             | Sub IntVal IntVal
             | Mult IntVal IntVal
+            | Div IntVal IntVal
             deriving (Eq, Show)
 
 data BoolVal = TRUE
@@ -40,7 +41,7 @@ data BoolVal = TRUE
              deriving (Eq, Show)
 
 data Range = IntRange IntVal IntVal
-          deriving (Eq, Show)
+           deriving (Eq, Show)
 
 data DefVal = DefInt IntVal
             | DefArr [IntVal]
