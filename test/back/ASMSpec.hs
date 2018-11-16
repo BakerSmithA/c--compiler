@@ -344,9 +344,10 @@ funcDefSpec = describe "funcDef" $ do
                   , StoreIdx { r=0, base=bp, offset=0 }
 
                   , LoadIdx { r=0, base=bp, offset=0 }
-                  , StoreIdx { r=0, base=0, offset=0 }
-                  , MoveI 0 10
-                  , StoreIdx { r=0, base=0, offset=1 }
+                  , MoveI 1 5
+                  , StoreIdx { r=1, base=0, offset=0 }
+                  , MoveI 1 10
+                  , StoreIdx { r=1, base=0, offset=1 }
 
                   , SubI sp sp 3 -- Remove reserved space.
                   , SysCall]

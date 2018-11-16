@@ -33,19 +33,39 @@ funcBodyAndStackClean name args body = do
     sp <- Env.sp
     let defs  = AST.defs body
         sizes = map (\(n, val) -> (n, AST.size val)) defs
-        totalSize = AST.totalSize (map snd defs)
+        localVarsSize = AST.totalSize (map snd defs)
 
     -- Create space for variables declared in function.
-    reserveVarSpace <- addConst (fromIntegral totalSize)
-    asm <- varsAtFrameStart args sizes (funcBody name body)
+    reserveVarSpace <- addConst (fromIntegral localVarsSize)
+    asm <- varsAtFrameStart args sizes (funcBody localVarsSize defs name body)
     return (reserveVarSpace ++ asm)
 
 -- Generates ASM for function body and return.
-funcBody :: AST.FuncName -> AST.Stm -> St [Instr]
-funcBody name body = do
+funcBody :: AST.VarSize -> [(AST.VarName, AST.DefVal)] -> AST.FuncName -> AST.Stm -> St [Instr]
+funcBody localVarsSize defs name body = do
+    assignPtrs <- assignArrPtrs localVarsSize defs
     bodyAsm <- stm body
     endAsm <- funcEnd name body
-    return (bodyAsm ++ endAsm)
+    return (assignPtrs ++ bodyAsm ++ endAsm)
+
+-- Return instructions to calculate pointers (into callee reserved buffer) and
+-- store them in variables.
+assignArrPtrs :: AST.VarSize -> [(AST.VarName, AST.DefVal)] -> St [Instr]
+assignArrPtrs totalSize ns = fmap fst $ foldM f ([], 0) ns where
+    f (is, accSize) (name, val) = do
+        let accSize' = accSize + AST.size val
+        -- -1 because array start is one address after array ptr.
+        assignAsm <- assignPtr (accSize' - 1) name val
+        return (is ++ assignAsm, accSize')
+
+    assignPtr :: AST.VarSize -> AST.VarName -> AST.DefVal -> St [Instr]
+    assignPtr accSize name (AST.DefArr elems) = Env.tempReg $ \reg -> do
+        sp <- Env.sp
+        let getSp = [Move reg sp]
+            compPtr = [SubI reg reg (fromIntegral accSize)]
+        store <- storeVar name reg
+        return (getSp ++ compPtr ++ store)
+    assignPtr _ _ _ = return []
 
 -- Return instructions to place at end of function.
 -- I.e. SysCall at end of main, return at end of functions (unless they already)
@@ -370,26 +390,3 @@ varsAtFrameStart args localVars st = state $ \sOld ->
         s' = Env.putVars localVars (fromIntegral (length args)) s
         (is, sNew) = runState st s'
     in (is, Env.restoreEnv sOld sNew)
-
--- -- Compute ASM with zeroed Bp, then return Bp to value before call.
--- zeroedBp :: St [Instr] -> St [Instr]
--- zeroedBp st = state $ \sOld ->
---     let savedBpOffset = Env.bpOffset sOld
---         (is, sNew) = runState st (Env.setBpOffset 0 sOld)
---     in (is, Env.setBpOffset savedBpOffset sNew)
---
--- -- Restores free registers, mapping from variables to addresses, and bpOffset
--- -- after block.
--- block :: St [Instr] -> St [Instr]
--- block = undefined
-
--- block st = state $ \sOld ->
---     let (is, sNew) = runState st sOld
---         sRestored  = Env.restoreEnv sOld sNew
---         bpOld      = Env.bpOffset sOld
---         bpNew      = Env.bpOffset sNew
---         sp         = Env.spIdx sNew
---         decSp      = SubI sp sp (bpNew - bpOld)
---     in if bpNew - bpOld == 0
---         then (is, sRestored)
---         else (is ++ [decSp], sRestored) -- Only dec sp if it was modified
