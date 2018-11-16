@@ -1,7 +1,40 @@
 def main() {
-    let grid = [0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0]
-    let f = num_neighbours(grid, 2, 2, 4, 4)
-    print(f)
+    let grid1 = [0, 0, 0, 0,  0, 1, 1, 0,  0, 1, 0, 0,  0, 0, 0, 0]
+    let grid2 = [0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0]
+
+    step(grid1, grid2, 4, 4)
+
+    print_grid(grid1, 4, 4)
+    println()
+    print_grid(grid2, 4, 4)
+}
+
+def step(grid: Int[], new_grid: Int[], w: Int, h: Int) {
+    for let y in 0..<h {
+        for let x in 0..<w {
+            let n = num_neighbours(grid, x, y, w, h)
+            let alive = grid[y * w + x]
+
+            if alive == 1 {
+                if n < 2 {
+                    new_grid[y * w + x] = 0
+                }
+                if n == 2 or n == 3 {
+                    new_grid[y * w + x] = 1
+                }
+                if n > 3 {
+                    new_grid[y * w + x] = 0
+                }
+
+            } else {
+                if n == 3 {
+                    new_grid[y * w + x] = 1
+                } else {
+                    new_grid[y * w + x] = 0
+                }
+            }
+        }
+    }
 }
 
 def num_neighbours(grid: Int[], x: Int, y: Int, w: Int, h: Int) {
