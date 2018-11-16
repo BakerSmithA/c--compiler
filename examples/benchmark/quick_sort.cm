@@ -1,0 +1,43 @@
+def main() {
+    let xs = [5, 67, 9, 34, 2, 1]
+    print_arr(xs, 6)
+    println()
+
+    quick_sort(xs, 0, 5)
+    print_arr(xs, 6)
+}
+
+def quick_sort(xs: Int[], low: Int, high: Int) {
+    if low < high {
+        let p = partition(xs, low, high)
+        quick_sort(xs, low, p-1)
+        quick_sort(xs, p+1, high)
+    }
+}
+
+def partition(xs: Int[], low: Int, high: Int) -> Int {
+    let pivot = xs[high]
+    let i = low - 1
+
+    for let j in low..<high {
+        if xs[j] < pivot or xs[j] == pivot {
+            i = i + 1
+            swap(xs, i, j)
+        }
+    }
+    swap(xs, i+1, high)
+    return i+1
+}
+
+def swap(xs: Int[], i: Int, j: Int) {
+    let tmp = xs[i]
+    xs[i] = xs[j]
+    xs[j] = tmp
+}
+
+def print_arr(xs: Int[], n: Int) {
+    for let i in 0..<n {
+        print(xs[i])
+        println()
+    }
+}
