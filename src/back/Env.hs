@@ -37,7 +37,7 @@ type St a = State Env a
 
 -- Environment with no variables, arguments, or used labels.
 empty :: Env
-empty = Env 13 14 15 16 (Set.fromList [0..12]) Map.empty 0 0
+empty = Env 12 13 14 15 (Set.fromList [0..11]) Map.empty 0 0
 
 -- Environment containing variables at given offset past bp.
 fromVars :: [(VarName, Val)] -> Env
