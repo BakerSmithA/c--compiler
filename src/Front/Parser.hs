@@ -29,7 +29,7 @@ import Front.AST
 --   IntType          : 'Int'
 --   Type             : IntType
 --                    | IntType[[IntLiteral]]
---                    | String
+--                    | Str
 --   VarName          : char+
 --   IntLiteral       : (0 | .. | 9)+
 --
@@ -100,7 +100,7 @@ whitespaceNl :: Parser ()
 whitespaceNl = many (oneOf "\t\n ") *> return ()
 
 reservedKeywords :: [String]
-reservedKeywords = ["Int", "if", "else", "True", "False", "in", "def", "return", "let", "print", "or", "while"]
+reservedKeywords = ["Str", "Int", "if", "else", "True", "False", "in", "def", "return", "let", "print", "or", "while"]
 
 -- Checks that the parsed identifier is not a reserved keyword.
 reserveCheckedId :: Parser Id -> Parser Id
@@ -128,7 +128,7 @@ num = read <$> some digitChar <* whitespace
 
 singleType :: Parser Type
 singleType = IntType <$ tok "Int"
-        <|> (ArrType IntType Nothing) <$ tok "String"
+        <|> (ArrType IntType Nothing) <$ tok "Str"
 
 dtype :: Parser Type
 dtype = try (ArrType <$> singleType <*> square (optional num))

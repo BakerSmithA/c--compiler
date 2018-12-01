@@ -1,0 +1,13 @@
+def main() {
+    let s = "abc"
+    print_str(s)
+    println()
+}
+
+def print_str(s: Str) {
+    let i = 0
+    while s[i] != 0 {
+        print(s[i])
+        i = i + 1
+    }
+}
