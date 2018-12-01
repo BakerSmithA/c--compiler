@@ -85,7 +85,8 @@ stm (AST.For name range body) = stm (AST.forAsWhile name range body)
 stm (AST.While cond body) = while cond body
 stm (AST.Call func) = call func
 stm (AST.Comp ss) = comp ss
-stm (AST.Print val) = printAsm val
+stm (AST.Print val) = printAsm Print val
+stm (AST.PrintC val) = printAsm PrintC val
 stm (AST.PrintLn) = println
 
 ret :: St [Instr]
@@ -199,10 +200,10 @@ comp (s:rest) = do
     return (sAsm ++ restAsm)
 
 -- Return ASM for printing an int value.
-printAsm :: AST.IntVal -> St [Instr]
-printAsm val = Env.tempReg $ \reg -> do
+printAsm :: (RegIdx -> Instr) -> AST.IntVal -> St [Instr]
+printAsm p val = Env.tempReg $ \reg -> do
     valAsm <- intVal val reg
-    return (valAsm ++ [Print reg])
+    return (valAsm ++ [p reg])
 
 -- Return ASM for printing a newline.
 println :: St [Instr]

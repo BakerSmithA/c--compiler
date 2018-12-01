@@ -100,7 +100,7 @@ whitespaceNl :: Parser ()
 whitespaceNl = many (oneOf "\t\n ") *> return ()
 
 reservedKeywords :: [String]
-reservedKeywords = ["Str", "Int", "if", "else", "True", "False", "in", "def", "return", "let", "print", "or", "while"]
+reservedKeywords = ["Str", "Int", "if", "else", "True", "False", "in", "def", "return", "let", "print", "printc", "or", "while"]
 
 -- Checks that the parsed identifier is not a reserved keyword.
 reserveCheckedId :: Parser Id -> Parser Id
@@ -184,6 +184,7 @@ defVal = DefArr <$> square (commaSep intVal)
 
 stm :: Parser Stm
 stm = try (Print <$ tok "print" <*> parens intVal)
+  <|> try (PrintC <$ tok "printc" <*> parens intVal)
   <|> try (PrintLn <$ tok "println" <* tok "(" <* tok ")")
   <|> try (Call <$> funcCall)
   <|> Return <$ tok "return" <*> intVal

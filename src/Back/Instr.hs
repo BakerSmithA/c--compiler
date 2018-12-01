@@ -73,8 +73,9 @@ data Instr
     | Ret                                -- Branch to address in link register.
     | SysCall                            -- Terminates execution.
     -- Debugging
-    | Print { r :: RegIdx } -- Print value in a register.
-    | PrintLn               -- Print a newline.
+    | Print  { r :: RegIdx } -- Print value in a register.
+    | PrintC { r :: RegIdx } -- Print value in a register as an ASCII character.
+    | PrintLn                -- Print a newline.
     -- Extra
     | NoOp
     | Label Label  -- Used to label branch locations.
@@ -122,8 +123,9 @@ encoded (BF r label) d = [22, r] ++ encodeW32 (addr label d)
 encoded (Ret)        _ = [12]
 encoded (SysCall)    _ = [21]
 -- Debugging
-encoded (Print r) _ = [13, r]
-encoded (PrintLn) _ = [20]
+encoded (Print r)  _ = [13, r]
+encoded (PrintC r) _ = [24, r]
+encoded (PrintLn)  _ = [20]
 -- Extra
 encoded (NoOp)    _ = []
 encoded (Label _) _ = []

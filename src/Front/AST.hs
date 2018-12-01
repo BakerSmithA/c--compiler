@@ -62,6 +62,7 @@ data Stm = Return IntVal
          | Call FuncCall
          | Comp [Stm]
          | Print IntVal
+         | PrintC IntVal
          | PrintLn
          deriving (Eq, Show)
 
