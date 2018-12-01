@@ -8,13 +8,13 @@ import Back.Env as Env (runSt, empty, fromVars, takeEnvReg)
 import Back.Instr
 
 sp :: RegIdx
-sp = 13
+sp = 12
 
 lr :: RegIdx
-lr = 14
+lr = 13
 
 bp :: RegIdx
-bp = 15
+bp = 14
 
 -- Take register from empty environment.
 takeEmptyEnv :: Env
