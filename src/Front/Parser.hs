@@ -1,6 +1,7 @@
 module Front.Parser where
 
 import Data.Void
+import Data.Char
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import Control.Monad.Combinators.Expr
@@ -84,7 +85,10 @@ braces :: Parser a -> Parser a
 braces = between (tokNl "{") (tok "}")
 
 parens :: Parser a -> Parser a
-parens =  between (tok "(") (tok ")")
+parens = between (tok "(") (tok ")")
+
+quotes :: Parser a -> Parser a
+quotes = between (tok "\"") (tok "\"")
 
 commaSep :: Parser a -> Parser [a]
 commaSep p = p `sepBy` (tok ",")
@@ -124,6 +128,7 @@ num = read <$> some digitChar <* whitespace
 
 singleType :: Parser Type
 singleType = IntType <$ tok "Int"
+        <|> (ArrType IntType Nothing) <$ tok "String"
 
 dtype :: Parser Type
 dtype = try (ArrType <$> singleType <*> square (optional num))
@@ -165,8 +170,16 @@ boolVal = makeExprParser boolVal' boolOps
 range :: Parser Range
 range = IntRange <$> intVal <* tok "..<" <*> intVal
 
+-- Parses a string literal as an array of integers, terminated by a 0 (null).
+stringLit :: Parser [IntVal]
+stringLit = quotes termChars where
+    termChars = fmap (++[Lit 0]) chars
+    chars     = many intChar
+    intChar   = fmap (\c -> Lit (ord c)) asciiChar
+
 defVal :: Parser DefVal
 defVal = DefArr <$> square (commaSep intVal)
+     <|> DefArr <$> stringLit
      <|> DefInt <$> intVal
 
 stm :: Parser Stm
