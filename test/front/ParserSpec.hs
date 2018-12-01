@@ -21,6 +21,12 @@ noOp = Comp []
 parserSpec :: Spec
 parserSpec = do
     describe "parser" $ do
+        context "parses strings" $ do
+            it "no args or statements" $ do
+                let s = "def f() { let s = \"ABC\" }"
+                    exp = FuncDef "f" [] Nothing (Def "s" (DefArr [Lit 65, Lit 66, Lit 67, Lit 0]))
+                runParser funcDefs "" s `shouldParse` [exp]
+
         context "parses functions with" $ do
             it "no args or statements" $ do
                 let s = "def f() {}"

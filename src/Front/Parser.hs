@@ -175,7 +175,7 @@ stringLit :: Parser [IntVal]
 stringLit = quotes termChars where
     termChars = fmap (++[Lit 0]) chars
     chars     = many intChar
-    intChar   = fmap (\c -> Lit (ord c)) asciiChar
+    intChar   = fmap (\c -> Lit (ord c)) (noneOf "\"")
 
 defVal :: Parser DefVal
 defVal = DefArr <$> square (commaSep intVal)
