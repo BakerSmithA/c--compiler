@@ -27,6 +27,8 @@ import Front.AST
 -- Grammar:
 --   IntType          : 'Int'
 --   Type             : IntType
+--                    | IntType[[IntLiteral]]
+--                    | String
 --   VarName          : char+
 --   IntLiteral       : (0 | .. | 9)+
 --
@@ -41,8 +43,9 @@ import Front.AST
 --                    | False
 --                    | IntVal == IntVal
 --
---   Def              : Type VarName = IntVal
---                    : [Type] VarName = [ ArrVals ]
+--   Def              : let VarName = IntVal
+--                    | let VarName = [ ArrVals ]
+--                    | let VarName = "char*"
 --   ArrVals          : ε
 --                    | NonEmptyArrVals
 --   NonEmptyArrVals  : IntVal ',' NonEmptyArrVals

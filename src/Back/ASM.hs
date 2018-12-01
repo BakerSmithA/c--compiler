@@ -30,28 +30,27 @@ mainFirst = sortBy order where
 -- cleanup.
 funcBodyAndStackClean :: AST.FuncName -> [AST.VarName] -> AST.Stm -> St [Instr]
 funcBodyAndStackClean name args body = do
-    sp <- Env.sp
     let defs  = AST.defs body
         sizes = map (\(n, val) -> (n, AST.size val)) defs
         localVarsSize = AST.totalSize (map snd defs)
 
     -- Create space for variables declared in function.
     reserveVarSpace <- addConst (fromIntegral localVarsSize)
-    asm <- varsAtFrameStart args sizes (funcBody localVarsSize defs name body)
+    asm <- varsAtFrameStart args sizes (funcBody defs name body)
     return (reserveVarSpace ++ asm)
 
 -- Generates ASM for function body and return.
-funcBody :: AST.VarSize -> [(AST.VarName, AST.DefVal)] -> AST.FuncName -> AST.Stm -> St [Instr]
-funcBody localVarsSize defs name body = do
-    assignPtrs <- assignArrPtrs localVarsSize defs
+funcBody :: [(AST.VarName, AST.DefVal)] -> AST.FuncName -> AST.Stm -> St [Instr]
+funcBody defs name body = do
+    assignPtrs <- assignArrPtrs defs
     bodyAsm <- stm body
     endAsm <- funcEnd name body
     return (assignPtrs ++ bodyAsm ++ endAsm)
 
 -- Return instructions to calculate pointers (into callee reserved buffer) and
 -- store them in variables.
-assignArrPtrs :: AST.VarSize -> [(AST.VarName, AST.DefVal)] -> St [Instr]
-assignArrPtrs totalSize ns = fmap fst $ foldM f ([], 0) ns where
+assignArrPtrs :: [(AST.VarName, AST.DefVal)] -> St [Instr]
+assignArrPtrs ns = fmap fst $ foldM f ([], 0) ns where
     f (is, accSize) (name, val) = do
         let accSize' = accSize + AST.size val
         -- -1 because array start is one address after array ptr.
@@ -59,7 +58,7 @@ assignArrPtrs totalSize ns = fmap fst $ foldM f ([], 0) ns where
         return (is ++ assignAsm, accSize')
 
     assignPtr :: AST.VarSize -> AST.VarName -> AST.DefVal -> St [Instr]
-    assignPtr accSize name (AST.DefArr elems) = Env.tempReg $ \reg -> do
+    assignPtr accSize name (AST.DefArr _) = Env.tempReg $ \reg -> do
         sp <- Env.sp
         let getSp = [Move reg sp]
             compPtr = [SubI reg reg (fromIntegral accSize)]
@@ -111,7 +110,6 @@ terminate = do
 -- Return instructions to subtract the size of local vars from stack.
 popLocalVars :: St [Instr]
 popLocalVars = do
-    sp <- Env.sp
     localVarsSize <- fmap Env.localVarsSize get
     subConst (fromIntegral localVarsSize)
 
@@ -228,7 +226,6 @@ defInt name val = Env.tempReg $ \reg -> do
 -- to by value stored in variable.
 defArr :: AST.VarName -> [AST.IntVal] -> St [Instr]
 defArr name elems = Env.tempReg $ \reg -> do
-    bp <- Env.bp
     varAsm <- var name reg
     storeAsm <- storeAll elems reg
     return (varAsm ++ storeAsm)

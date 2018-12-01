@@ -137,7 +137,7 @@ tempRegs :: [a] -> ([(a, RegIdx)] -> St b) -> St b
 tempRegs xs f = do
     valsAndRegs <- mapM (\x -> fmap (\reg -> (x, reg)) takeReg) xs
     res <- f valsAndRegs
-    mapM freeReg (fmap snd valsAndRegs)
+    _ <- mapM freeReg (fmap snd valsAndRegs)
     return res
 
 runSt :: Env -> St a -> a
