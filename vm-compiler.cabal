@@ -24,7 +24,7 @@ executable c--
                      , Front.AST
                      , Front.Parser
   -- other-extensions:
-  build-depends:       base >=4.10 && <4.11
+  build-depends:       base
                      , megaparsec
                      , process
                      , parser-combinators
@@ -38,7 +38,7 @@ test-suite spec
   ghc-options:         -Wall -fno-warn-name-shadowing -Wno-type-defaults -O0
   type:                exitcode-stdio-1.0
   main-is:             Test.hs
-  build-depends:       base >=4.10 && <4.11
+  build-depends:       base
                      , megaparsec
                      , hspec
                      , hspec-megaparsec
