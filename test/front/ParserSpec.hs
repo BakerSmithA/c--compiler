@@ -43,6 +43,11 @@ parserSpec = do
                     exp = FuncDef "f" [] Nothing (Def "s" (DefArr [Lit 0, Lit 1, Lit 2]))
                 runParser funcDefs "" s `shouldParse` [exp]
 
+            it "parses arrays of same element" $ do
+                let s = "def f() { let s = [0] * 3 }"
+                    exp = FuncDef "f" [] Nothing (Def "s" (DefArr [Lit 0, Lit 0, Lit 0]))
+                runParser funcDefs "" s `shouldParse` [exp]
+
         context "parses functions with" $ do
             it "no args or statements" $ do
                 let s = "def f() {}"

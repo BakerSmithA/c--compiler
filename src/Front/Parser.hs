@@ -47,9 +47,12 @@ import Front.AST
 --                    | False
 --                    | IntVal == IntVal
 --
---   Def              : let VarName = IntVal
---                    | let VarName = [ ArrVals ]
---                    | let VarName = "char*"
+--   Val              : IntVal
+--                    | [ ArrVals ]
+--                    | "char*"
+--                    | [ IntVal ] * IntLiteral
+--
+--   Def              : let VarName = Val
 --   ArrVals          : ε
 --                    | NonEmptyArrVals
 --   NonEmptyArrVals  : IntVal ',' NonEmptyArrVals
@@ -148,10 +151,10 @@ funcCall = FuncCall <$> snakeId <*> parens (commaSep intVal)
 
 intVal' :: Parser IntVal
 intVal' = try (ArrAccess <$> snakeId <*> square intVal)
-     <|> try (Result <$> funcCall)
-     <|> Var  <$> snakeId
-     <|> Lit  <$> num
-     <|> (Lit . ord) <$> singleQuoted (noneOf "\'")
+      <|> try (Result <$> funcCall)
+      <|> Var  <$> snakeId
+      <|> Lit  <$> num
+      <|> (Lit . ord) <$> singleQuoted (noneOf "\'")
 
 intOps :: [[Operator Parser IntVal]]
 intOps = [[InfixL (Mult <$ tok "*"), InfixL (Div <$ tok "/")],
@@ -184,8 +187,17 @@ stringLit = quotes termChars where
     chars     = many intChar
     intChar   = fmap (\c -> Lit (ord c)) (noneOf "\"")
 
+-- Parses an array of all the same element with the syntax: [x] * y
+sameElArr :: Parser [IntVal]
+sameElArr = do
+    el <- square intVal
+    _ <- tok "*"
+    times <- num
+    return (replicate times el)
+
 defVal :: Parser DefVal
-defVal = DefArr <$> square (commaSep (whitespaceNl *> intVal))
+defVal = try (DefArr <$> sameElArr)
+     <|> DefArr <$> square (commaSep (whitespaceNl *> intVal))
      <|> DefArr <$> stringLit
      <|> DefInt <$> intVal
 
