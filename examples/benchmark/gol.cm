@@ -15,7 +15,7 @@ def main() {
                  0, 0, 0, 0, 0, 0, 0,
                  0, 0, 0, 0, 0, 0, 0]
 
-    run(grid1, grid2, 7, 7, 20)
+    run(grid1, grid2, 7, 7, 25)
 }
 
 def run(grid1: Int[], grid2: Int[], w: Int, h: Int, gens: Int) {
