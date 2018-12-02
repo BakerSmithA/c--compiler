@@ -1,15 +1,20 @@
 def main() {
-    let data = [0] * 50
-    let instrs = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
-    inter(data, instrs)
-    print_data(data, 10)
+    let data = [0] * 3
+    let instrs = ""
+    inter(data, 3, instrs)
+    print_data(data, 3)
 }
 
-def inter(data: Int[], instrs: Str) {
+def inter(data: Int[], n_data: Int, instrs: Str) {
     let dp = 0
     let pc = 0
     while instrs[pc] != 0 {
         dp = inter_dp_instr(instrs[pc], dp, data)
+
+        if dp > n_data or dp == n_data {
+            print_error(dp)
+        }
+
         pc = inter_pc_instr(instrs[pc], pc, instrs, data[dp])
     }
 }
@@ -55,4 +60,15 @@ def print_data(data: Int[], n: Int) {
         print(data[i])
         printc('.')
     }
+}
+
+def print_error(dp: Int) {
+    let s = "DP OVERFLOW: "
+    let i = 0
+    while s[i] != 0 {
+        printc(s[i])
+        i = i + 1
+    }
+    print(dp)
+    println()
 }
