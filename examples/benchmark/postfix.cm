@@ -1,0 +1,28 @@
+def main() {
+    let s = "934"
+    expr(s, 0)
+}
+
+
+def expr(ts: Str, ptr: Int) {
+    term(ts, ptr)
+}
+
+def term(ts: Str, ptr: Int) {
+    let c = ts[ptr]
+    while 47 < c and c < 58 {
+        printc(c)
+        ptr = ptr + 1
+        c = ts[ptr]
+    }
+}
+
+def error() {
+    let s = "Error"
+    let i = 0
+    while s[i] != 0 {
+        printc(s[i])
+        i = i + 1
+    }
+    println()
+}
