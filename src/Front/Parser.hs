@@ -97,7 +97,7 @@ quotes :: Parser a -> Parser a
 quotes = between (tok "\"") (tok "\"")
 
 singleQuoted :: Parser a -> Parser a
-singleQuoted = between (tok "\'") (tok "\'")
+singleQuoted = between (chunk "\'") (tok "\'")
 
 commaSep :: Parser a -> Parser [a]
 commaSep p = p `sepBy` (tok ",")

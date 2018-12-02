@@ -32,6 +32,11 @@ parserSpec = do
                     exp = FuncDef "f" [] Nothing (Def "s" (DefInt (Lit 65)))
                 runParser funcDefs "" s `shouldParse` [exp]
 
+            it "parses space character" $ do
+                let s = "def f() { let s = \' \' }"
+                    exp = FuncDef "f" [] Nothing (Def "s" (DefInt (Lit 32)))
+                runParser funcDefs "" s `shouldParse` [exp]
+
         context "parses arrays" $ do
             it "parses arrays" $ do
                 let s = "def f() { let s = [0, 1, 2] }"

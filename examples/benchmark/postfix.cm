@@ -1,28 +1,33 @@
 def main() {
-    let s = "934"
+    let s = "934+24-100"
     expr(s, 0)
 }
 
 
 def expr(ts: Str, ptr: Int) {
-    term(ts, ptr)
+    let ptr = term(ts, ptr)
+    while ts[ptr] != 0 {
+        let c = ts[ptr]
+        if c == '+' {
+            printc('.')
+            ptr = term(ts, ptr + 1)
+            printc('+')
+        } else {
+            if c == '-' {
+                printc('.')
+                ptr = term(ts, ptr + 1)
+                printc('-')
+            }
+        }
+    }
 }
 
-def term(ts: Str, ptr: Int) {
+def term(ts: Str, ptr: Int) -> Int {
     let c = ts[ptr]
     while 47 < c and c < 58 {
         printc(c)
         ptr = ptr + 1
         c = ts[ptr]
     }
-}
-
-def error() {
-    let s = "Error"
-    let i = 0
-    while s[i] != 0 {
-        printc(s[i])
-        i = i + 1
-    }
-    println()
+    return ptr
 }
