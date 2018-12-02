@@ -22,9 +22,25 @@ parserSpec :: Spec
 parserSpec = do
     describe "parser" $ do
         context "parses strings" $ do
-            it "no args or statements" $ do
+            it "parses string literals" $ do
                 let s = "def f() { let s = \"ABC\" }"
                     exp = FuncDef "f" [] Nothing (Def "s" (DefArr [Lit 65, Lit 66, Lit 67, Lit 0]))
+                runParser funcDefs "" s `shouldParse` [exp]
+
+            it "parses characters" $ do
+                let s = "def f() { let s = \'A\' }"
+                    exp = FuncDef "f" [] Nothing (Def "s" (DefInt (Lit 65)))
+                runParser funcDefs "" s `shouldParse` [exp]
+
+        context "parses arrays" $ do
+            it "parses arrays" $ do
+                let s = "def f() { let s = [0, 1, 2] }"
+                    exp = FuncDef "f" [] Nothing (Def "s" (DefArr [Lit 0, Lit 1, Lit 2]))
+                runParser funcDefs "" s `shouldParse` [exp]
+
+            it "parses arrays with newlines between elements" $ do
+                let s = "def f() { let s = [0,\n1, 2] }"
+                    exp = FuncDef "f" [] Nothing (Def "s" (DefArr [Lit 0, Lit 1, Lit 2]))
                 runParser funcDefs "" s `shouldParse` [exp]
 
         context "parses functions with" $ do

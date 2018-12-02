@@ -35,10 +35,13 @@ import Front.AST
 --
 --   IntVal           : VarName
 --                    | IntLiteral
+--                    | Char
 --                    | FuncCall
 --                    | VarName [ IntVal ]
 --                    | IntVal + IntVal
 --                    | IntVal - IntVal
+--                    | IntVal * IntVal
+--                    | IntVal / IntVal
 --
 --   BoolVal          : True
 --                    | False
@@ -89,6 +92,9 @@ parens = between (tok "(") (tok ")")
 
 quotes :: Parser a -> Parser a
 quotes = between (tok "\"") (tok "\"")
+
+singleQuoted :: Parser a -> Parser a
+singleQuoted = between (tok "\'") (tok "\'")
 
 commaSep :: Parser a -> Parser [a]
 commaSep p = p `sepBy` (tok ",")
@@ -143,8 +149,9 @@ funcCall = FuncCall <$> snakeId <*> parens (commaSep intVal)
 intVal' :: Parser IntVal
 intVal' = try (ArrAccess <$> snakeId <*> square intVal)
      <|> try (Result <$> funcCall)
-     <|> Var <$> snakeId
-     <|> Lit <$> num
+     <|> Var  <$> snakeId
+     <|> Lit  <$> num
+     <|> (Lit . ord) <$> singleQuoted (noneOf "\'")
 
 intOps :: [[Operator Parser IntVal]]
 intOps = [[InfixL (Mult <$ tok "*"), InfixL (Div <$ tok "/")],
@@ -178,7 +185,7 @@ stringLit = quotes termChars where
     intChar   = fmap (\c -> Lit (ord c)) (noneOf "\"")
 
 defVal :: Parser DefVal
-defVal = DefArr <$> square (commaSep intVal)
+defVal = DefArr <$> square (commaSep (whitespaceNl *> intVal))
      <|> DefArr <$> stringLit
      <|> DefInt <$> intVal
 
