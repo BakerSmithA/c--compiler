@@ -1,6 +1,6 @@
 def main() {
     let data = [0] * 10
-    let instrs = "[+]"
+    let instrs = "+>>++"
     inter(data, instrs)
     print_data(data, 10)
 }
@@ -9,7 +9,7 @@ def inter(data: Int[], instrs: Str) {
     let dp = 0
     let pc = 0
     while instrs[pc] != 0 {
-        dp = inter_instr(instrs[dp], dp, data)
+        dp = inter_instr(instrs[pc], dp, data)
         pc = pc + 1
     }
 }
@@ -31,24 +31,6 @@ def inter_instr(c: Chr, dp: Int, data: Int[]) -> Int {
     }
     if c == '.' {
         print(data[dp])
-        return dp
-    }
-    if c == '[' {
-        if data[dp] == 0 {
-            while data[dp] != ']' {
-                dp = dp + 1
-            }
-            dp = dp + 1
-        }
-        return dp
-    }
-    if c == ']' {
-        if data[dp] != 0 {
-            while data[dp] != '[' {
-                dp = dp - 1
-            }
-            dp = dp + 1
-        }
         return dp
     }
 }
