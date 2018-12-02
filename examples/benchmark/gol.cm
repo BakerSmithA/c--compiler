@@ -1,19 +1,28 @@
 def main() {
-    let grid1 = [0, 0, 1, 0, 0,  0, 0, 0, 1, 0,  0, 1, 1, 1, 0,  0, 0, 0, 0, 0,  0, 0, 0, 0, 0]
-    let grid2 = [0, 0, 0, 0, 0,  0, 0, 0, 0, 0,  0, 0, 0, 0, 0,  0, 0, 0, 0, 0,  0, 0, 0, 0, 0]
+    let grid1 = [0, 0, 1, 0, 0,
+                 0, 0, 0, 1, 0,
+                 0, 1, 1, 1, 0,
+                 0, 0, 0, 0, 0,
+                 0, 0, 0, 0, 0]
 
-    run(grid1, grid2, 5, 5, 6)
+    let grid2 = [0, 0, 0, 0, 0,
+                 0, 0, 0, 0, 0,
+                 0, 0, 0, 0, 0,
+                 0, 0, 0, 0, 0,
+                 0, 0, 0, 0, 0]
+
+    run(grid1, grid2, 5, 5, 20)
 }
 
 def run(grid1: Int[], grid2: Int[], w: Int, h: Int, gens: Int) {
     let fst = 1
-    print(0)
+    print_gen(0)
     println()
     print_grid(grid1, w, h)
     println()
 
     for let i in 0..<gens {
-        print(i+1)
+        print_gen(i+1)
 
         if fst == 1 {
             step(grid1, grid2, w, h)
@@ -78,11 +87,29 @@ def wrap(x: Int, n: Int) -> Int {
     return x
 }
 
+def print_gen(gen: Int) {
+    let s = "Gen "
+    print_str(s)
+    print(gen)
+}
+
 def print_grid(grid: Int[], w: Int, h: Int) {
     for let y in 0..<h {
         for let x in 0..<w {
-            print(grid[y * w + x])
+            if grid[y * w + x] == 1 {
+                printc('#')
+            } else {
+                printc('.')
+            }
         }
         println()
+    }
+}
+
+def print_str(s: Str) {
+    let i = 0
+    while s[i] != 0 {
+        printc(s[i])
+        i = i + 1
     }
 }
