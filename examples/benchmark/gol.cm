@@ -103,7 +103,7 @@ def print_grid(grid: Int[], w: Int, h: Int) {
             if grid[y * w + x] == 1 {
                 printc('#')
             } else {
-                printc('.')
+                printc('_')
             }
         }
         println()

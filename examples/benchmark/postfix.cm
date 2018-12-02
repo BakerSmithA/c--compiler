@@ -9,12 +9,12 @@ def expr(ts: Str, ptr: Int) {
     while ts[ptr] != 0 {
         let c = ts[ptr]
         if c == '+' {
-            printc('.')
+            printc(' ')
             ptr = term(ts, ptr + 1)
             printc('+')
         } else {
             if c == '-' {
-                printc('.')
+                printc(' ')
                 ptr = term(ts, ptr + 1)
                 printc('-')
             }
