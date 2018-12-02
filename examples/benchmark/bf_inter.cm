@@ -1,21 +1,21 @@
 def main() {
-    let data = [0] * 3
-    let instrs = ""
-    inter(data, 3, instrs)
-    print_data(data, 3)
+    let instrs = "++++>>[-]<<[->>+<<]"
+    let data = [0] * 8
+    inter(data, 8, instrs)
+    print_data(data, 8)
 }
 
 def inter(data: Int[], n_data: Int, instrs: Str) {
     let dp = 0
     let pc = 0
     while instrs[pc] != 0 {
-        dp = inter_dp_instr(instrs[pc], dp, data)
+        let c = instrs[pc]
+        pc = inter_pc_instr(c, pc, instrs, data[dp])
+        dp = inter_dp_instr(c, dp, data)
 
         if dp > n_data or dp == n_data {
             print_error(dp)
         }
-
-        pc = inter_pc_instr(instrs[pc], pc, instrs, data[dp])
     }
 }
 
@@ -33,7 +33,7 @@ def inter_dp_instr(c: Chr, dp: Int, data: Int[]) -> Int {
         data[dp] = data[dp] - 1
     }
     if c == '.' {
-        print(data[dp])
+        printc(data[dp])
     }
 
     return dp
@@ -45,7 +45,7 @@ def inter_pc_instr(c: Chr, pc: Int, instrs: Str, val: Int) -> Int {
             pc = pc + 1
         }
     } else {
-        if instrs [pc] == ']' and val != 0{
+        if instrs [pc] == ']' and val != 0 {
             while instrs[pc] != '[' {
                 pc = pc - 1
             }
