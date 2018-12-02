@@ -1,0 +1,6 @@
+def main() {
+    let s = "abc"
+    if s[0] == 'a' {
+        printc(s[0])
+    }
+}
