@@ -37,7 +37,9 @@ type St a = State Env a
 
 -- Environment with no variables, arguments, or used labels.
 empty :: Env
-empty = Env 12 13 14 15 (Set.fromList [0..11]) Map.empty 0 0
+empty = Env 12 13 14 15 (Set.fromList gpr) Map.empty 0 0 where
+    -- General Purpose Registers, does not include 11 as reserved for PC.
+    gpr = [0..10]
 
 -- Environment containing variables at given offset past bp.
 fromVars :: [(VarName, Val)] -> Env
