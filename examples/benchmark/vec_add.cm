@@ -1,15 +1,9 @@
 def main() {
-    let xs = [5, 4, 3, 2, 1]
-    let ys = [1, 2, 3, 4, 5]
-    let rs = [0, 0, 0, 0, 0]
+    let xs = [5] * 10
+    let ys = [6] * 10
+    let rs = [0] * 10
 
-    for let i in 0..<5 {
+    for let i in 0..<10 {
         rs[i] = xs[i] + ys[i]
     }
-
-    print(rs[0])
-    print(rs[1])
-    print(rs[2])
-    print(rs[3])
-    print(rs[4])
 }
