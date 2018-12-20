@@ -1,9 +1,9 @@
 def main() {
-    let xs = [5] * 10
-    let ys = [6] * 10
-    let rs = [0] * 10
+    let xs = [5] * 80
+    let ys = [6] * 80
+    let rs = [0] * 80
 
-    for let i in 0..<10 {
+    for let i in 0..<80 {
         rs[i] = xs[i] + ys[i]
     }
 }

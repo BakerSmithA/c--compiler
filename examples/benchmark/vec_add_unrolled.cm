@@ -1,0 +1,18 @@
+def main() {
+    let xs = [5] * 80
+    let ys = [6] * 80
+    let rs = [0] * 80
+
+    let i = 0
+    while i < 80 {
+        rs[i+0] = xs[i+0] + ys[i+0]
+        rs[i+1] = xs[i+1] + ys[i+1]
+        rs[i+2] = xs[i+2] + ys[i+2]
+        rs[i+3] = xs[i+3] + ys[i+3]
+        rs[i+4] = xs[i+4] + ys[i+4]
+        rs[i+5] = xs[i+5] + ys[i+5]
+        rs[i+6] = xs[i+6] + ys[i+6]
+        rs[i+7] = xs[i+7] + ys[i+7]
+        i = i + 8
+    }
+}
