@@ -1,0 +1,24 @@
+def main() {
+    let s = 0
+
+    let x1 = 1
+    print(s)
+    let x2 = 1
+    print(s)
+    let x3 = 1
+    print(s)
+    let x4 = 1
+    print(s)
+    let x5 = 1
+    print(s)
+    let x6 = 1
+    print(s)
+    let x7 = 1
+    print(s)
+    let x8 = 1
+    print(s)
+    let x9 = 1
+    print(s)
+    let x10 = 1
+    print(s)
+}
