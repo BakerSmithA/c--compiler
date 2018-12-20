@@ -3,7 +3,6 @@ def main() {
     expr(s, 0)
 }
 
-
 def expr(ts: Str, ptr: Int) {
     let ptr = term(ts, ptr)
     while ts[ptr] != 0 {
