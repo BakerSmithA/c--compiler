@@ -71,7 +71,7 @@ def main() {
 }
 ```
 
-This compiles to the assembly below. Lines 1-3 setup space on the stack for the variable `i`, and populate the address with the value `0`, i.e. the initial value of `i`. Lines 4-6 check whether the terminsation condition of the loop is fulfilled, i.e. is `i` less than `10`. If the condition is fulfilled, then a branch to the function clean up (lines 20-21) is taken. If the loop is still being executed, execution continues to line 9. Line 9-10 performs the body of the loop, printing out the value of `i`. Lines 11-14 increments the value of `i`, such as is the semantics of a for-loop. Finally, lines 15-18 re-checks the loop termination condition and chooses whether to execute the body of the loop again.
+This compiles to the assembly below. Lines 1-3 setup space on the stack for the variable `i`, and populate the address with the value `0`, i.e. the initial value of `i`. Lines 4-6 check whether the terminsation condition of the loop is fulfilled, i.e. is `i` less than `10`. If the condition is fulfilled, then a branch to the function clean up (lines 20-21) is taken. If the loop is still being run, execution continues to line 9. Lines 9-10 perform the body of the loop, printing out the value of `i`. Lines 11-14 increment the value of `i`, such as is the semantics of a for-loop. Finally, lines 15-18 re-check the loop termination condition and chooses whether to execute the body of the loop again.
 
 ```
 00| .main:
