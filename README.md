@@ -193,3 +193,70 @@ def sum_arr(n: Int, arr: Int[]) -> Int {
   return total
 }
 ```
+
+This is compiled to the assembly below. 
+
+```
+000| .main:
+001|     ADDI sp sp #4
+002|     MOV r0 sp
+003|     SUBI r0 r0 #3
+004|     ST r0 bp #0
+005|     LD r0 bp #0
+006|     MOVI r1 #5
+007|     ST r1 r0 #0
+008|     MOVI r1 #10
+009|     ST r1 r0 #1
+010|     MOVI r1 #15
+011|     ST r1 r0 #2
+012|     MOVI r1 #3
+013|     LD r2 bp #0
+014|     ST bp sp #0
+015|     ST lr sp #1
+016|     ADDI sp sp #2
+017|     MOV bp sp
+018|     MOVI lr .0
+019|     ST r1 sp #0
+020|     ST r2 sp #1
+021|     ADDI sp sp #2
+022|     B .sum_arr
+023| .0:
+024|     SUBI sp sp #2
+025|     LD lr sp #-1
+026|     LD bp sp #-2
+027|     SUBI sp sp #2
+028|     MOV r0 ret
+029|     PRINT r0
+030|     SUBI sp sp #4
+031|     EXIT
+
+032| .sum_arr:
+033|     ADDI sp sp #2
+034|     MOVI r0 #0
+035|     ST r0 bp #3
+036|     MOVI r0 #0
+037|     ST r0 bp #2
+038|     LD r0 bp #2
+039|     LD r1 bp #0
+040|     LT r0 r0 r1
+041|     BF r0 .2
+042| .1:
+043|     LD r1 bp #3
+044|     LD r2 bp #1
+045|     LD r3 bp #2
+046|     LD r2 r2 r3
+047|     ADD r1 r1 r2
+048|     ST r1 bp #3
+049|     LD r1 bp #2
+050|     MOVI r2 #1
+051|     ADD r1 r1 r2
+052|     ST r1 bp #2
+053|     LD r0 bp #2
+054|     LD r1 bp #0
+055|     LT r0 r0 r1
+056|     BT r0 .1
+057| .2:
+058|     LD ret bp #3
+059|     SUBI sp sp #2
+060|     RET
+```
