@@ -1,5 +1,5 @@
 # C-- Compiler
-C-- is a programming language much like C, but with a few features missing allowing for easier compilation. The language still includes the essentials such as: variables, loops, functions with arguments and return values, arrays.
+C-- is a programming language much like C, but with a few features missing allowing for easier compilation. The language still includes the essentials such as: variables, loops, functions with arguments and return values, arrays. Example programs can be found [here](https://github.com/BakerSmithA/c--compiler/tree/master/examples/benchmark).
 
 # Hello World
 Every program has a `main` function, which is run first. Using the `printc` command we can print out the character representation of a number. Since strings are null terminated, we can use a loop to iterate through each character, printing them out.
@@ -46,7 +46,7 @@ if True {
 }
 ```
 
-Compiles to the assembly below. Line 1 moves the value `1` into `r0`, i.e. storing the representation of `True` in `r0`. Line 2 checks whether the value stored in `r0` is false. If it is, the body of the if-statement will be skipped and execution will branch to the label `.0`, i.e. the end of the program. If the value stored in `r0` is True, then the branch will not be taken and execution will continue to lines 3 and 4 which print out the value of `r0`.
+This compiles to the assembly below. Line 1 moves the value `1` into `r0`, i.e. storing the representation of `True` in `r0`. Line 2 checks whether the value stored in `r0` is false. If it is, the body of the if-statement will be skipped and execution will branch to the label `.0`, i.e. the end of the program. If the value stored in `r0` is True, then the branch will not be taken and execution will continue to lines 3 and 4 which print out the value of `r0`.
 
 This assembly code could be optimised to remove the branch and simply exit, however, performing no optimisations made it easier to produce test programs for the [Processor Simulator](https://github.com/BakerSmithA/processor_sim). 
 
@@ -61,6 +61,42 @@ This assembly code could be optimised to remove the branch and simply exit, howe
 ```
 
 # Loops
+The language supports while loops and for loops (which are compiled to while loops). For example:
+
+```c
+def main() {
+  for let i in 0..<10 {
+    print(i)
+  }
+}
+```
+
+This compiles to the assembly below. 
+
+```
+00| .main:
+01|     ADDI sp sp #1
+02|     MOVI r0 #0
+03|     ST r0 bp #0
+04|     LD r0 bp #0
+05|     MOVI r1 #10
+06|     LT r0 r0 r1
+07|     BF r0 .1
+08| .0:
+09|     LD r1 bp #0
+10|     PRINT r1
+11|     LD r1 bp #0
+12|     MOVI r2 #1
+13|     ADD r1 r1 r2
+14|     ST r1 bp #0
+15|     LD r0 bp #0
+16|     MOVI r1 #10
+17|     LT r0 r0 r1
+18|     BT r0 .0
+19| .1:
+20|     SUBI sp sp #1
+21|     EXIT
+```
 
 # Arrays
 
