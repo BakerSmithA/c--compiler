@@ -99,5 +99,36 @@ This compiles to the assembly below. Lines 1-3 setup space on the stack for the 
 ```
 
 # Arrays
+Arrays are used to store multiple values in a contigous memory region, and allow for access using the subscript operator. For example:
+
+```c
+def main() {
+  let xs = [5, 10, 15]
+  print(xs[1])
+}
+```
+
+This compiles to the assembly below. Line 1 makes space on the stack for the three elements of the array, plus a pointer to the start of the array (i.e. the value of the variable `xs`). Lines 2-4 calculates the global offset of the start of the array and stores the value on the stack (in variable `xs`). By storing the global offset, it makes it easy to pass pointers to arrays between functions. Lines 5-7 store the value `5` at index `0` in the array. Lines 8-9 store the value `10` at index `1` in the array. Lines 10-11 store the value `15` at index `2` in the array. Lines 12-15 fetch the value at index `1` in the array, and print the value to the screen. Finally, Lines 16-17 clean up the stack and exit the program.
+
+```
+00| .main:
+01|     ADDI sp sp #4
+02|     MOV r0 sp
+03|     SUBI r0 r0 #3
+04|     ST r0 bp #0
+05|     LD r0 bp #0
+06|     MOVI r1 #5
+07|     ST r1 r0 #0
+08|     MOVI r1 #10
+09|     ST r1 r0 #1
+10|     MOVI r1 #15
+11|     ST r1 r0 #2
+12|     LD r0 bp #0
+13|     MOVI r1 #1
+14|     LD r0 r0 r1
+15|     PRINT r0
+16|     SUBI sp sp #4
+17|     EXIT
+```
 
 # Function Calls
