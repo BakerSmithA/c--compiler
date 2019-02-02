@@ -11,7 +11,9 @@ import Data.List (sortBy)
 type BinOp = RegIdx -> RegIdx -> RegIdx -> Instr
 
 prog :: [AST.FuncDef] -> St [Instr]
-prog [AST.FuncDef name args _ body] = funcBodyAndStackClean name (map AST.varName args) body
+prog [AST.FuncDef name args _ body] = do
+    is <- funcBodyAndStackClean name (map AST.varName args) body
+    return ([Label name] ++ is)
 prog funcs = fmap concat $ mapM toAsm (mainFirst funcs) where
     toAsm (AST.FuncDef name args _ body) = do
         let argNames = map AST.varName args

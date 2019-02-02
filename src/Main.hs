@@ -2,7 +2,8 @@ module Main where
 
 import Back.ASM
 import Back.Instr as Instr
-import Back.Env as Env (runSt, empty)
+import Back.Env (Env)
+import Back.Env as Env
 import Front.Parser as Parser
 import Data.Word
 import qualified Data.ByteString as B
@@ -15,17 +16,26 @@ newlines (Instr.Ret) = "\n"
 newlines (Instr.SysCall) = "\n"
 newlines _           = ""
 
-prettyReg :: RegIdx -> String
-prettyReg r = "r" ++ show r
+-- Prints general purpose registers as 'rX', where X is the number of the register.
+-- Prints special purpose registers using their abbreviation, e.g. Stack Pointer is 'sp'.
+prettyReg :: Env -> RegIdx -> String
+prettyReg env r | Env.spIdx env  == r = "sp"
+                | Env.lrIdx env  == r = "lr"
+                | Env.bpIdx env  == r = "bp"
+                | Env.retIdx env == r = "ret"
+                | otherwise           = "r" ++ show r
 
+-- Used to indent instructions that are not labels.
+-- Makes easier to segment different pieces of the program.
 indent :: Instr -> String
 indent (Instr.Label _) = ""
 indent _               = "    "
 
-showInstrs :: [Instr] -> String
-showInstrs is = unlines strNumbered where
-    strNumbered = map (\(n, i) -> (numStr n) ++ "| " ++ indent i ++ (pretty prettyReg i) ++ newlines i) numbered
+showInstrs :: Env -> [Instr] -> String
+showInstrs env is = unlines strNumbered where
+    strNumbered = map (\(n, i) -> (numStr n) ++ "| " ++ indent i ++ (prettyInstr i) ++ newlines i) numbered
     numbered    = zip [0..] is
+    prettyInstr i = pretty (prettyReg env) i
     -- Used to pad line numbers according to the maximum line number index.
     numStr :: Int -> String
     numStr n    = printf ("%0" ++ show (numDigits (length is)) ++ "d") n
@@ -42,9 +52,10 @@ compile inPath outPath = do
     case runParser Parser.funcDefs inPath contents of
         Left err -> putStrLn (errorBundlePretty err)
         Right ast -> do
-            let instrs = runSt Env.empty (prog ast)
-                asm = Instr.asm instrs
-            putStrLn (showInstrs instrs)
+            let env    = Env.empty
+                instrs = runSt env (prog ast)
+                asm    = Instr.asm instrs
+            putStrLn (showInstrs env instrs)
             writeASM asm outPath
 
 main :: IO ()
