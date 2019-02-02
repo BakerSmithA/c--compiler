@@ -81,6 +81,40 @@ data Instr
     | Label Label  -- Used to label branch locations.
     deriving (Eq, Show)
 
+prettyLabel :: LabelAddr -> String
+prettyLabel (EndAddr)         = ".end"
+prettyLabel (LabelAddr label) = "." ++ label
+
+pretty :: (RegIdx -> String) -> Instr -> String
+pretty sr (MoveI r val)          = "MOVI " ++ sr r ++ " #" ++ show val
+pretty sr (MoveLabel r label)    = "MOVI " ++ sr r ++ " " ++ prettyLabel label
+pretty sr (Move r src)           = "MOV "  ++ sr r ++ " " ++ sr src
+pretty sr (LoadIdx r b off)      = "LD "   ++ sr r ++ " " ++ sr b ++ " #" ++ show off
+pretty sr (LoadBaseIdx r b off)  = "LD "   ++ sr r ++ " " ++ sr b ++ " " ++ sr off
+pretty sr (StoreIdx r b off)     = "ST "   ++ sr r ++ " " ++ sr b ++ " #" ++ show off
+pretty sr (StoreBaseIdx r b off) = "ST "   ++ sr r ++ " " ++ sr b ++ " " ++ sr off
+pretty sr (Add r x y)            = "ADD "  ++ sr r ++ " " ++ sr x ++ " " ++ sr y
+pretty sr (AddI r x y)           = "ADDI " ++ sr r ++ " " ++ sr x ++ " #" ++ show y
+pretty sr (Sub r x y)            = "SUB "  ++ sr r ++ " " ++ sr x ++ " " ++ sr y
+pretty sr (SubI r x y)           = "SUBI " ++ sr r ++ " " ++ sr x ++ " #" ++ show y
+pretty sr (Mult r x y)           = "MUL "  ++ sr r ++ " " ++ sr x ++ " " ++ sr y
+pretty sr (Div r x y)            = "DIV "  ++ sr r ++ " " ++ sr x ++ " " ++ sr y
+pretty sr (Eq r x y)             = "EQ "   ++ sr r ++ " " ++ sr x ++ " " ++ sr y
+pretty sr (Lt r x y)             = "LT "   ++ sr r ++ " " ++ sr x ++ " " ++ sr y
+pretty sr (Or r x y)             = "OR "   ++ sr r ++ " " ++ sr x ++ " " ++ sr y
+pretty sr (And r x y)            = "AND "  ++ sr r ++ " " ++ sr x ++ " " ++ sr y
+pretty sr (Not r x)              = "NOT "  ++ sr r ++ " " ++ sr x
+pretty _  (B label)              = "B ."   ++ label
+pretty sr (BT r label)           = "BT "  ++ sr r ++ " ." ++ label
+pretty sr (BF r label)           = "BF "  ++ sr r ++ " ." ++ label
+pretty _  (Ret)                  = "RET"
+pretty _  (SysCall)              = "EXIT"
+pretty sr (Print r)              = "PRINT " ++ sr r
+pretty sr (PrintC r)             = "PRINTC " ++ sr r
+pretty _  (PrintLn)              = "PRINTLN"
+pretty _  (NoOp)                 = "NOP"
+pretty _  (Label label)          = "." ++ label ++ ":"
+
 encodeW32 :: Word32 -> [Word8]
 encodeW32 = reverse . unpack . toLazyByteString . word32LE
 

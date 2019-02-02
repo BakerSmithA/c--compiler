@@ -14,9 +14,16 @@ newlines (Instr.Ret) = "\n"
 newlines (Instr.SysCall) = "\n"
 newlines _           = ""
 
+prettyReg :: RegIdx -> String
+prettyReg r = "r" ++ show r
+
+indent :: Instr -> String
+indent (Instr.Label _) = ""
+indent _               = "    "
+
 showInstrs :: [Instr] -> String
 showInstrs is = unlines strNumbered where
-    strNumbered = map (\(n, i) -> (show n) ++ ":\t" ++ (show i) ++ newlines i) numbered
+    strNumbered = map (\(n, i) -> (show n) ++ "|\t" ++ indent i ++ (pretty prettyReg i) ++ newlines i) numbered
     numbered    = zip [0..] is
 
 writeASM :: [Word8] -> FilePath -> IO ()
