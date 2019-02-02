@@ -26,14 +26,15 @@ def main() {
 }
 ```
 
-This compiles to the assembly code below. Line 0 increments the stack pointer to make some space to store the variable. Line 1 moves the value 10 into the register 0. Line 2 takes this value and uses the `StoreIdx` instruction to store the value of a register to a memory address, i.e. the space made on the stack. Finally, Line 3 cleans up the stack by decrementing the stack pointer, and Line 4 exits the program.  
+This compiles to the assembly code below. Line 1 increments the stack pointer to make some space to store the variable. Line 2 moves the value 10 into the register 0. Line 3 takes this value and uses the `StoreIdx` instruction to store the value of a register to a memory address, i.e. the space made on the stack. Finally, Line 4 cleans up the stack by decrementing the stack pointer, and Line 5 exits the program.  
 
 ```
-0| AddI {r = 12, x = 12, i = 1}
-1| MoveI {r = 0, val = 10}
-2| StoreIdx {r = 0, base = 14, offset = 0}
-3| SubI {r = 12, x = 12, i = 1}
-4| SysCall
+0| .main:
+1|     ADDI sp sp #1
+2|     MOVI r0 #10
+3|     ST r0 bp #0
+4|     SUBI sp sp #1
+5|     EXIT
 ```
 
 # Conditionals
