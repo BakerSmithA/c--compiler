@@ -198,8 +198,7 @@ This is compiled to the assembly below.
 
 ```
 000| .main:
-001|     ADDI sp sp #4
-
+     ...
 012|     MOVI r1 #3
 013|     LD r2 bp #0
 014|     ST bp sp #0
@@ -207,7 +206,9 @@ This is compiled to the assembly below.
 016|     ADDI sp sp #2
 017|     MOV bp sp
 018|     MOVI lr .0
-     ...
+019|     ST r1 sp #0
+020|     ST r2 sp #1
+021|     ADDI sp sp #2
 022|     B .sum_arr
 023| .0:
 024|     SUBI sp sp #2
