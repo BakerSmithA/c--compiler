@@ -1,7 +1,7 @@
 # C-- Compiler
 C-- is a programming language much like C, but with a few features missing allowing for easier compilation. The language still includes the essentials such as: variables, loops, functions with arguments and return values, arrays. Example programs can be found [here](https://github.com/BakerSmithA/c--compiler/tree/master/examples/benchmark).
 
-# Instal
+# Install
 
 Clone the repo, and then run the following commands. The compiled output can be found in `dist/build/c--`.
 
@@ -142,4 +142,54 @@ This compiles to the assembly below. Line 1 makes space on the stack for the thr
 17|     EXIT
 ```
 
+## Strings
+Strings are compiled to arrays of integers terminated with a `0`. The values stored at each position are the ASCII values of each character. The `printc` command can then be used to print out the ACII character corresponding to the integer value. For example:
+
+```c
+def main() {
+  let s = "abc"
+  printc(s[1])
+}
+```
+
+This compiles to the assembly below. Lines 1-13 sets up the variable `s` and stores the ASCII values corresponding to `a`, `b`, and `c` in the array (i.e. 97, 98, and 99 respectively). The value `0` is also stored in the array, as strings are null terminated. Lines 14-17 print out the character corresponding to the value at index `1` in `s`. Finally, the stack is cleaned up and the function exited.
+
+```
+00| .main:
+01|     ADDI sp sp #5
+02|     MOV r0 sp
+03|     SUBI r0 r0 #4
+04|     ST r0 bp #0
+05|     LD r0 bp #0
+06|     MOVI r1 #97
+07|     ST r1 r0 #0
+08|     MOVI r1 #98
+09|     ST r1 r0 #1
+10|     MOVI r1 #99
+11|     ST r1 r0 #2
+12|     MOVI r1 #0
+13|     ST r1 r0 #3
+14|     LD r0 bp #0
+15|     MOVI r1 #1
+16|     LD r0 r0 r1
+17|     PRINTC r0
+18|     SUBI sp sp #5
+19|     EXIT
+```
+
 # Function Calls
+
+```c
+def main() {
+  let xs = [5, 10, 15]
+  print(sum_arr(3, xs))
+}
+
+def sum_arr(n: Int, arr: Int[]) -> Int {
+  let total = 0
+  for let i in 0..<n {
+    total = total + arr[i]
+  }
+  return total
+}
+```
