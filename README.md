@@ -1,6 +1,17 @@
 # C-- Compiler
 C-- is a programming language much like C, but with a few features missing allowing for easier compilation. The language still includes the essentials such as: variables, loops, functions with arguments and return values, arrays. Example programs can be found [here](https://github.com/BakerSmithA/c--compiler/tree/master/examples/benchmark).
 
+# Instal
+
+Clone the repo, and then run the following commands. The compiled output can be found in `dist/build/c--`.
+
+```
+> cd c--compiler
+> cabal sandbox init
+> cabal install
+> cabal build
+```
+
 # Hello World
 Every program has a `main` function, which is run first. Using the `printc` command we can print out the character representation of a number. Since strings are null terminated, we can use a loop to iterate through each character, printing them out.
 
