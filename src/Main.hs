@@ -8,6 +8,7 @@ import Data.Word
 import qualified Data.ByteString as B
 import Text.Megaparsec
 import System.Environment
+import Text.Printf
 
 newlines :: Instr -> String
 newlines (Instr.Ret) = "\n"
@@ -23,8 +24,14 @@ indent _               = "    "
 
 showInstrs :: [Instr] -> String
 showInstrs is = unlines strNumbered where
-    strNumbered = map (\(n, i) -> (show n) ++ "|\t" ++ indent i ++ (pretty prettyReg i) ++ newlines i) numbered
+    strNumbered = map (\(n, i) -> (numStr n) ++ "| " ++ indent i ++ (pretty prettyReg i) ++ newlines i) numbered
     numbered    = zip [0..] is
+    -- Used to pad line numbers according to the maximum line number index.
+    numStr :: Int -> String
+    numStr n    = printf ("%0" ++ show (numDigits (length is)) ++ "d") n
+
+numDigits :: Int -> Integer
+numDigits n = toInteger (round (logBase 10 (fromIntegral n)))
 
 writeASM :: [Word8] -> FilePath -> IO ()
 writeASM asm path = B.writeFile path (B.pack asm)
