@@ -194,7 +194,16 @@ def sum_arr(n: Int, arr: Int[]) -> Int {
 }
 ```
 
-This is compiled to the assembly below. 
+This is compiled to the assembly below. Ommitted lines 1-11 setup the array `xs`. 
+
+## Entry
+Line 12 and 13 saves the value `3` (`n` argument to `sum_arr`) and a pointer to `xs` (`arr` argument to `sum_arr`). These will be pushed onto the stack later, however, they are calculated now because the base pointer of the stack frame is modified. Lines 14-15 save the base pointer and stack pointer so they can be restored after the function invocation. Line 16 increments the stack pointer to account for the SP and BP being pushed to the stack. Line 17 updates the base pointer to the new base of call stack. Line 18 saves the address of the label `.0` in the Link Register. This will be the location returned to when the `RET` instruction is executed by the `sum_arr` function. Like the x86 calling convention, the callee places arguments on the stack for the called function to use. Lines 19-20 push the number `3` and a pointer to `xs` onto the stack, as arguments to the `sum_arr` function. Since the base pointer was updated (line 17), the callee can refer to these variables by offsetting from the base pointer. 
+
+## Call
+Line 22 branches to the label `.sum_arr`, which sets the PC to be at line 32. Omitted lines perform the body of the function, and store the value of `total` in a variable at address `bp + 3`. Line 58 loads the value of `total` and stores it in the `ret` register. This is a special register for storing a return value. Line 59 cleans up the stack. Line 60 then branches back to the address stored in the Link Register. 
+
+## Clean-Up
+Line 24 pops the arguments to `sum_arr` from the stack. Lines 25-26 then restore the old values of the BP and SP, and line 27 pops them from the stack too. Lines 28-29 print the value returned by `sum_arr`, and then lines 30-31 clean up the stack and exit the program.
 
 ```
 000| .main:
